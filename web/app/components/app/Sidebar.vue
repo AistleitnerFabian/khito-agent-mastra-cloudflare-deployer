@@ -24,22 +24,8 @@
 
     <USeparator class="w-full" />
 
-    <UInput
-      v-if="open"
-      icon="i-lucide-search"
-      placeholder="Search..."
-      class="mx-2 mt-2 w-auto overflow-hidden"
-      variant="soft"
-      :ui="{
-        leading: 'pointer-events-none ps-2',
-        leadingIcon: 'size-4',
-        base: '!outline-0',
-      }"
-      @click="open = true"
-    />
-
     <UNavigationMenu
-      :items="primaryNavigationItems"
+      :items="chatNavigationItems"
       :collapsed="!open"
       orientation="vertical"
       class="p-2"
@@ -55,12 +41,33 @@
       }"
     >
       <template #khito-label>
-        Khito <span class="ms-1 text-muted">AI chat</span>
+        Khito <span class="ms-1 text-dimmed">AI chat</span>
       </template>
     </UNavigationMenu>
 
     <div v-if="open" class="px-4 pt-3 pb-1">
-      <p class="text-xs font-medium text-muted">Admin</p>
+      <p class="text-xs font-medium text-dimmed">Workspace</p>
+    </div>
+
+    <UNavigationMenu
+      :items="workspaceNavigationItems"
+      :collapsed="!open"
+      orientation="vertical"
+      class="p-2 pt-0"
+      :tooltip="{
+        delayDuration: 0,
+        content: { side: 'right' },
+      }"
+      :ui="{
+        link: 'overflow-hidden p-2',
+        linkLeadingIcon: 'size-4',
+        linkLabel: 'text-xs font-light text-highlighted',
+        list: 'flex flex-col gap-1',
+      }"
+    />
+
+    <div v-if="open" class="px-4 pt-3 pb-1">
+      <p class="text-xs font-medium text-dimmed">Admin</p>
     </div>
 
     <UNavigationMenu
@@ -87,30 +94,53 @@ import type { NavigationMenuItem } from "@nuxt/ui";
 
 const open = ref(true);
 
-const primaryNavigationItems: NavigationMenuItem[] = [
+const chatNavigationItems: NavigationMenuItem[] = [
   {
     label: "Khito",
     icon: "i-lucide-bot",
     to: "/",
     slot: "khito",
   },
+];
+
+const workspaceNavigationItems: NavigationMenuItem[] = [
   {
-    label: "Memory",
-    icon: "i-lucide-brain-circuit",
+    label: "Inbox",
+    icon: "i-lucide-inbox",
     disabled: true,
   },
   {
-    label: "Settings",
-    icon: "i-lucide-settings-2",
+    label: "Documents",
+    icon: "i-lucide-files",
+    disabled: true,
+  },
+  {
+    label: "Archive",
+    icon: "i-lucide-search",
     disabled: true,
   },
 ];
 
 const adminNavigationItems: NavigationMenuItem[] = [
   {
-    label: "Admin",
-    icon: "i-lucide-shield-check",
-    disabled: true,
+    label: "Document definitions",
+    icon: "i-lucide-file-text",
+    to: "/admin/document-types",
+  },
+  {
+    label: "Master data",
+    icon: "i-lucide-database",
+    to: "/admin/master-data",
+  },
+  {
+    label: "Custom Knowledge",
+    icon: "i-lucide-notebook-pen",
+    to: "/admin/custom-knowledge",
+  },
+  {
+    label: "Connections",
+    icon: "i-lucide-plug-zap",
+    to: "/admin/connections",
   },
 ];
 </script>
