@@ -1,0 +1,6 @@
+node_modules/
+.mastra/
+.dev.vars
+.env
+.wrangler/
+dist/
