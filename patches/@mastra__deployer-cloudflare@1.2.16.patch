@@ -1,0 +1,39 @@
+diff --git a/dist/index.js b/dist/index.js
+index 1d437a53fb4fdf261170c6d43637a73b65e6e949..ebdd26ba9ca700879477f1620eef21eaaefb6c44 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -31,11 +31,24 @@ function mastraInstanceWrapper$1() {
+ 	const exportName = "mastra";
+ 	const className = "Mastra";
+ 	const t = babel.types;
++	const removeDeployerOption = mastraInstance => {
++		const options = mastraInstance.arguments[0];
++		if (!t.isObjectExpression(options)) return;
++		options.properties = options.properties.filter(property => !t.isObjectProperty(property) || !t.isIdentifier(property.key, { name: "deployer" }));
++	};
+ 	return {
+ 		name: "wrap-mastra",
+-		visitor: { ExportNamedDeclaration(path) {
++		visitor: { VariableDeclaration(path) {
++			const remainingDeclarations = path.node.declarations.filter(declaration => !t.isIdentifier(declaration.id, { name: "__bundleDir" }) && !t.isIdentifier(declaration.id, { name: "__workspaceBasePath" }));
++			if (remainingDeclarations.length === path.node.declarations.length) return;
++			if (remainingDeclarations.length === 0) path.remove();
++			else path.node.declarations = remainingDeclarations;
++		}, ObjectProperty(path) {
++			if (path.parentPath.isObjectExpression() && t.isIdentifier(path.node.key, { name: "defaultWorkspaceBasePath" })) path.node.value = t.stringLiteral("");
++		}, ExportNamedDeclaration(path) {
+ 			if (t.isVariableDeclaration(path.node?.declaration)) {
+ 				for (const declaration of path.node.declaration.declarations) if (t.isIdentifier(declaration?.id, { name: exportName }) && t.isNewExpression(declaration?.init) && t.isIdentifier(declaration.init.callee, { name: className })) {
++					removeDeployerOption(declaration.init);
+ 					declaration.init = t.arrowFunctionExpression([], declaration.init);
+ 					break;
+ 				}
+@@ -49,7 +62,7 @@ function mastraInstanceWrapper(mastraEntryFile) {
+ 	return {
+ 		name: "mastra-wrapper",
+ 		transform(code, id) {
+-			if (id !== mastraEntryFile) return null;
++			if (id !== mastraEntryFile && !code.includes("new CloudflareDeployer") && !code.includes("defaultWorkspaceBasePath")) return null;
+ 			const result = transformSync(code, {
+ 				filename: id,
+ 				babelrc: false,

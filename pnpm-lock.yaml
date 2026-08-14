@@ -4,16 +4,19 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  '@mastra/deployer-cloudflare@1.2.16': 6ccdf73c5d5609cd9bd58e0d0a08332b486109c2ad43cbf9d64f83032a7e69fc
+
 importers:
 
   .:
     dependencies:
       '@mastra/core':
-        specifier: ^1.58.0
-        version: 1.58.0(zod@4.4.3)
+        specifier: ^1.59.0
+        version: 1.59.0(zod@4.4.3)
       '@mastra/deployer-cloudflare':
-        specifier: ^1.2.15
-        version: 1.2.15(@hono/node-server@1.19.17(hono@4.13.2))(@mastra/core@1.58.0(zod@4.4.3))(esbuild@0.28.2)(typescript@7.0.2)(wrangler@4.122.0)(zod@4.4.3)
+        specifier: ^1.2.16
+        version: 1.2.16(patch_hash=6ccdf73c5d5609cd9bd58e0d0a08332b486109c2ad43cbf9d64f83032a7e69fc)(@hono/node-server@1.19.17(hono@4.13.2))(@mastra/core@1.59.0(zod@4.4.3))(esbuild@0.28.2)(typescript@7.0.2)(wrangler@4.123.0)(zod@4.4.3)
       pnpapi:
         specifier: 0.0.0
         version: 0.0.0
@@ -25,14 +28,14 @@ importers:
         specifier: ^26.2.0
         version: 26.2.0
       mastra:
-        specifier: ^1.24.0
-        version: 1.24.0(@hono/node-server@1.19.17(hono@4.13.2))(@mastra/core@1.58.0(zod@4.4.3))(typescript@7.0.2)(zod@4.4.3)
+        specifier: ^1.25.0
+        version: 1.25.0(@hono/node-server@1.19.17(hono@4.13.2))(@mastra/core@1.59.0(zod@4.4.3))(typescript@7.0.2)(zod@4.4.3)
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
       wrangler:
-        specifier: ^4.122.0
-        version: 4.122.0
+        specifier: ^4.123.0
+        version: 4.123.0
 
 packages:
 
@@ -800,14 +803,14 @@ packages:
     resolution: {integrity: sha512-qC72D4+CDdjGqJvkFMMEAtancHUQ7/d/tAiHf64z8MopFDmcrtbcJuerDtFceuAfQJ2pDSfCKCtbqoGBNnwg0w==}
     engines: {node: '>=8'}
 
-  '@mastra/core@1.58.0':
-    resolution: {integrity: sha512-+41tyP9obK+OgO655gjQC7SGnZTnsEN+I0PociVFW6CghSdors++0X9jch5RFLr8Qi3eWQpefWPCA1ZjdDRKGg==}
+  '@mastra/core@1.59.0':
+    resolution: {integrity: sha512-LMPkEtGcAeaCBq0IPPk/yuaaA/p8+BJjaZnNREkoJ4l7p5/CBpFqu3fHfMoBLoiabqCqF+5kaw6JFNztq/4Vtw==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
 
-  '@mastra/deployer-cloudflare@1.2.15':
-    resolution: {integrity: sha512-3Ip0m+cGaSBV7khXFsrgrugAjTYDFxBY+eHbcAl/Q6NxrP8ZciZvhFcYrquTkppTZaiiiHrjeMvfrJgfquEwtQ==}
+  '@mastra/deployer-cloudflare@1.2.16':
+    resolution: {integrity: sha512-alXr8MkqwMSlQm3l0zHscnzJJwJw0WmHN5M7/DFJWhWGwk0IZlqt1LriC6wBCQz4Ok3Udcpdyq4pPtsmChj1Rw==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
       '@mastra/core': '>=1.50.0-0 <2.0.0-0'
@@ -817,8 +820,8 @@ packages:
       wrangler:
         optional: true
 
-  '@mastra/deployer@1.58.0':
-    resolution: {integrity: sha512-zMYikaEV5bGoFq0h+Z4aVPgoFEOmTtei1sEV4KLwZCUsAdjLicFDBIQRqcw6ADjun8Ewv8LAfmAh1wRTo4+IVg==}
+  '@mastra/deployer@1.59.0':
+    resolution: {integrity: sha512-76OliU5hcLlnvfez4ciD9nqVNiO8HcmWUrkOqd8GIYLscMV+Co5UtEi56pp5hSe8UvAQCD5RJJez4ZF65BqREA==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
       '@mastra/core': '>=1.50.0-0 <2.0.0-0'
@@ -829,14 +832,14 @@ packages:
     peerDependencies:
       '@mastra/core': '>=1.0.0-0 <2.0.0-0'
 
-  '@mastra/schema-compat@1.3.6':
-    resolution: {integrity: sha512-Dfis6eme6S9+b4Bf8TQjROvkET0Mz+S/bNfoExJPUcGafHX9u1lr80ilBN02D72K7eMFrbP78VbXq3rCMKv3NA==}
+  '@mastra/schema-compat@1.3.7':
+    resolution: {integrity: sha512-06WfY+j9rulYnDp8CM7pL7JIyrntkMolqmyyb1VJNEzlYTQCIcJcY0SwQiubZv2tztmoYGikszDiRVyXp0E9gA==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
 
-  '@mastra/server@1.58.0':
-    resolution: {integrity: sha512-YKVOnuNQeOv/I92VsExqRUdc42ZEOdh+7n2ewm8RrtnX7hPW4doDeKs+UYpTNiur0IG/o8J2RSu4Fwy1KfCJPw==}
+  '@mastra/server@1.59.0':
+    resolution: {integrity: sha512-3pgKj+w44JtPahzb1nFnAkKRTGM3NB1TXBxKyqNZ3nWsgIGelajQxVJC6423sgu2SG7cz01lXBItwZjRfLucJg==}
     engines: {node: '>=22.13.0'}
     peerDependencies:
       '@mastra/core': '>=1.50.0-0 <2.0.0-0'
@@ -2041,8 +2044,8 @@ packages:
   markdown-table@3.0.4:
     resolution: {integrity: sha512-wiYz4+JrLyb/DqW2hkFJxP7Vd7JuTDm77fvbM8VfEQdmSMqcImWeeRbHwZjBjIFki/VaMK2BhFi7oUUZeM5bqw==}
 
-  mastra@1.24.0:
-    resolution: {integrity: sha512-vum8fBnnWa+2/L0gdAkJKAqWIsaaH3JX9awfg1aUxljq2s+XwIceAsxw+CvjfNI0G0fMyBmnNV5miwbWjSddDQ==}
+  mastra@1.25.0:
+    resolution: {integrity: sha512-agvmepSDr7sKV9T8/B3Yc4rfQoRZaB7nXcLcVobXz73BkRD/dOtiq4wt8CumUVt/wE5zv/X/B+QDQ1sFbNTc+g==}
     engines: {node: '>=22.13.0'}
     hasBin: true
     peerDependencies:
@@ -2200,8 +2203,8 @@ packages:
     resolution: {integrity: sha512-OqbOk5oEQeAZ8WXWydlu9HJjz9WVdEIvamMCcXmuqUYjTknH/sqsWvhQ3vgwKFRR1HpjvNBKQ37nbJgYzGqGcg==}
     engines: {node: '>=6'}
 
-  miniflare@5.20260811.0-alpha:
-    resolution: {integrity: sha512-sypXsD5fjY88fZNedPqnwrwR1dwfnfbfW7MfvMyIfPJdtRiCCOpUnjWGeFVYYZ+0fQVICye6Juu+vZgzTEx8XA==}
+  miniflare@5.20260811.1-alpha:
+    resolution: {integrity: sha512-DtOG0BeanIxs2sH0smFvExZD89cBQwGckbHiFkRJrrNAUu3NGClZkUxqu+zy7HYfKBAgq935EMY49vIPm3JVdA==}
     engines: {node: '>=22.0.0'}
 
   minimatch@10.2.6:
@@ -2729,8 +2732,8 @@ packages:
     engines: {node: '>=16'}
     hasBin: true
 
-  wrangler@4.122.0:
-    resolution: {integrity: sha512-qkskzgQ76Y1qvVe5JARgvc3RISq6BC2rPoxQhFoKH1dKIwQc3GDFttQ/7m2OfeQ+tmQRzynv2dy/DXnxFCj2Lw==}
+  wrangler@4.123.0:
+    resolution: {integrity: sha512-VXo2I1oa0x9aGAKIFPRSQPqTh0RBY5Ktl44YOhNmsJQFUdJKDA2vVTU6Xj+FC2koll6orJqWZN8jbXVIk9O67Q==}
     engines: {node: '>=22.0.0'}
     hasBin: true
     peerDependencies:
@@ -3366,7 +3369,7 @@ snapshots:
     dependencies:
       '@lukeed/csprng': 1.1.0
 
-  '@mastra/core@1.58.0(zod@4.4.3)':
+  '@mastra/core@1.59.0(zod@4.4.3)':
     dependencies:
       '@a2a-js/sdk-v0_3': '@a2a-js/sdk@0.3.14'
       '@a2a-js/sdk-v1': '@a2a-js/sdk@1.0.1'
@@ -3378,7 +3381,7 @@ snapshots:
       '@ai-sdk/provider-v7': '@ai-sdk/provider@4.0.4'
       '@isaacs/ttlcache': 2.1.5
       '@lukeed/uuid': 2.0.1
-      '@mastra/schema-compat': 1.3.6(zod@4.4.3)
+      '@mastra/schema-compat': 1.3.7(zod@4.4.3)
       '@modelcontextprotocol/server': 2.0.0
       '@sindresorhus/slugify': 2.2.1
       '@standard-schema/spec': 1.1.0
@@ -3412,18 +3415,18 @@ snapshots:
       - utf-8-validate
       - workflow
 
-  '@mastra/deployer-cloudflare@1.2.15(@hono/node-server@1.19.17(hono@4.13.2))(@mastra/core@1.58.0(zod@4.4.3))(esbuild@0.28.2)(typescript@7.0.2)(wrangler@4.122.0)(zod@4.4.3)':
+  '@mastra/deployer-cloudflare@1.2.16(patch_hash=6ccdf73c5d5609cd9bd58e0d0a08332b486109c2ad43cbf9d64f83032a7e69fc)(@hono/node-server@1.19.17(hono@4.13.2))(@mastra/core@1.59.0(zod@4.4.3))(esbuild@0.28.2)(typescript@7.0.2)(wrangler@4.123.0)(zod@4.4.3)':
     dependencies:
       '@babel/core': 8.0.1
-      '@mastra/core': 1.58.0(zod@4.4.3)
-      '@mastra/deployer': 1.58.0(@hono/node-server@1.19.17(hono@4.13.2))(@mastra/core@1.58.0(zod@4.4.3))(typescript@7.0.2)(zod@4.4.3)
+      '@mastra/core': 1.59.0(zod@4.4.3)
+      '@mastra/deployer': 1.59.0(@hono/node-server@1.19.17(hono@4.13.2))(@mastra/core@1.59.0(zod@4.4.3))(typescript@7.0.2)(zod@4.4.3)
       '@rollup/plugin-virtual': 3.0.2(rollup@4.62.4)
       cloudflare: 5.2.0
       rollup: 4.62.4
       rollup-plugin-esbuild: 6.2.1(esbuild@0.28.2)(rollup@4.62.4)
       zod: 4.4.3
     optionalDependencies:
-      wrangler: 4.122.0
+      wrangler: 4.123.0
     transitivePeerDependencies:
       - '@hono/node-server'
       - bufferutil
@@ -3433,14 +3436,14 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@mastra/deployer@1.58.0(@hono/node-server@1.19.17(hono@4.13.2))(@mastra/core@1.58.0(zod@4.4.3))(typescript@7.0.2)(zod@4.4.3)':
+  '@mastra/deployer@1.59.0(@hono/node-server@1.19.17(hono@4.13.2))(@mastra/core@1.59.0(zod@4.4.3))(typescript@7.0.2)(zod@4.4.3)':
     dependencies:
       '@babel/core': 8.0.1
       '@babel/preset-typescript': 8.0.1(@babel/core@8.0.1)
       '@babel/traverse': 8.0.4
       '@hono/node-ws': 1.3.1(@hono/node-server@1.19.17(hono@4.13.2))(hono@4.13.2)
-      '@mastra/core': 1.58.0(zod@4.4.3)
-      '@mastra/server': 1.58.0(@mastra/core@1.58.0(zod@4.4.3))(zod@4.4.3)
+      '@mastra/core': 1.59.0(zod@4.4.3)
+      '@mastra/server': 1.59.0(@mastra/core@1.59.0(zod@4.4.3))(zod@4.4.3)
       '@optimize-lodash/rollup-plugin': 5.1.0(rollup@4.62.4)
       '@rollup/plugin-alias': 6.0.0(rollup@4.62.4)
       '@rollup/plugin-commonjs': 29.0.2(rollup@4.62.4)
@@ -3472,21 +3475,21 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@mastra/loggers@1.2.0(@mastra/core@1.58.0(zod@4.4.3))':
+  '@mastra/loggers@1.2.0(@mastra/core@1.59.0(zod@4.4.3))':
     dependencies:
-      '@mastra/core': 1.58.0(zod@4.4.3)
+      '@mastra/core': 1.59.0(zod@4.4.3)
       pino: 10.3.1
       pino-pretty: 13.1.3
 
-  '@mastra/schema-compat@1.3.6(zod@4.4.3)':
+  '@mastra/schema-compat@1.3.7(zod@4.4.3)':
     dependencies:
       json-schema-to-zod: 2.8.1
       zod: 4.4.3
       zod-from-json-schema: 0.5.6
 
-  '@mastra/server@1.58.0(@mastra/core@1.58.0(zod@4.4.3))(zod@4.4.3)':
+  '@mastra/server@1.59.0(@mastra/core@1.59.0(zod@4.4.3))(zod@4.4.3)':
     dependencies:
-      '@mastra/core': 1.58.0(zod@4.4.3)
+      '@mastra/core': 1.59.0(zod@4.4.3)
       hono: 4.13.2
       zod: 4.4.3
 
@@ -3708,7 +3711,7 @@ snapshots:
 
   '@types/node-fetch@2.6.13':
     dependencies:
-      '@types/node': 18.19.130
+      '@types/node': 26.2.0
       form-data: 4.0.6
 
   '@types/node@18.19.130':
@@ -4511,15 +4514,15 @@ snapshots:
 
   markdown-table@3.0.4: {}
 
-  mastra@1.24.0(@hono/node-server@1.19.17(hono@4.13.2))(@mastra/core@1.58.0(zod@4.4.3))(typescript@7.0.2)(zod@4.4.3):
+  mastra@1.25.0(@hono/node-server@1.19.17(hono@4.13.2))(@mastra/core@1.59.0(zod@4.4.3))(typescript@7.0.2)(zod@4.4.3):
     dependencies:
       '@babel/parser': 8.0.4
       '@babel/types': 8.0.4
       '@clack/prompts': 1.7.0
       '@expo/devcert': 1.2.1
-      '@mastra/core': 1.58.0(zod@4.4.3)
-      '@mastra/deployer': 1.58.0(@hono/node-server@1.19.17(hono@4.13.2))(@mastra/core@1.58.0(zod@4.4.3))(typescript@7.0.2)(zod@4.4.3)
-      '@mastra/loggers': 1.2.0(@mastra/core@1.58.0(zod@4.4.3))
+      '@mastra/core': 1.59.0(zod@4.4.3)
+      '@mastra/deployer': 1.59.0(@hono/node-server@1.19.17(hono@4.13.2))(@mastra/core@1.59.0(zod@4.4.3))(typescript@7.0.2)(zod@4.4.3)
+      '@mastra/loggers': 1.2.0(@mastra/core@1.59.0(zod@4.4.3))
       archiver: 8.0.0
       commander: 14.0.3
       dotenv: 17.4.2
@@ -4867,7 +4870,7 @@ snapshots:
 
   mimic-fn@2.1.0: {}
 
-  miniflare@5.20260811.0-alpha:
+  miniflare@5.20260811.1-alpha:
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       sharp: 0.35.2
@@ -5505,13 +5508,13 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20260811.1
       '@cloudflare/workerd-windows-64': 1.20260811.1
 
-  wrangler@4.122.0:
+  wrangler@4.123.0:
     dependencies:
       '@cloudflare/kv-asset-handler': 0.5.0
       '@cloudflare/unenv-preset': 2.16.1(unenv@2.0.0-rc.24)(workerd@1.20260811.1)
       blake3-wasm: 2.1.5
       esbuild: 0.28.1
-      miniflare: 5.20260811.0-alpha
+      miniflare: 5.20260811.1-alpha
       path-to-regexp: 6.3.0
       unenv: 2.0.0-rc.24
       workerd: 1.20260811.1
