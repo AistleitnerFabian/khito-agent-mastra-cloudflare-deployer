@@ -1,0 +1,33 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme {
+  --font-sans: "Inter", sans-serif;
+}
+
+:root {
+  --khito-bg: #fafaf7;
+  --khito-ink: #0f0f0e;
+  --khito-border-soft: #e8e8e3;
+  --ui-bg: var(--khito-bg);
+}
+
+html,
+body,
+#__nuxt {
+  min-height: 100vh;
+}
+
+html,
+body {
+  background: var(--khito-bg);
+  color: var(--khito-ink);
+}
+
+body {
+  margin: 0;
+}
+
+button {
+  cursor: pointer;
+}

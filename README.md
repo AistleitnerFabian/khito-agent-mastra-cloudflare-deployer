@@ -1,19 +1,8 @@
-# Khito Mastra Agent
+# Khito agent platform
 
-A minimal, private Mastra agent prepared for Cloudflare Workers.
+This repository contains two pnpm workspaces:
 
-## Start
+- `mastra/` deploys the private `khito-agent` Cloudflare Worker.
+- `web/` is the public Nuxt application and holds the `KHITO_AGENT` service binding.
 
-1. Copy `.env.example` to `.env` and set `OPENROUTER_API_KEY`.
-2. Install dependencies with `pnpm install`.
-3. Run `pnpm dev` and open Mastra Studio at `http://localhost:4111`.
-
-## Build
-
-Run `pnpm build`. Mastra generates the Cloudflare Worker into `.mastra/output/`.
-
-The Worker has `workers_dev: false` and no route or custom domain. Bind it to a caller Worker before exposing any public application endpoint.
-
-## Agent structure
-
-The Khito agent uses Mastra's file-based discovery. See [the agent guide](docs/mastra-file-based-agent.md) for its layout, local development, and extension points.
+Run `pnpm dev:mastra` or `pnpm dev:web` for local development. Build all workspaces with `pnpm build`.

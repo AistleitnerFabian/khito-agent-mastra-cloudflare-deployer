@@ -1,0 +1,15 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "khito-web",
+  "main": ".output/server/index.mjs",
+  "assets": {
+    "directory": ".output/public"
+  },
+  "compatibility_date": "2026-08-14",
+  "services": [
+    {
+      "binding": "KHITO_AGENT",
+      "service": "khito-agent"
+    }
+  ]
+}

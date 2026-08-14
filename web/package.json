@@ -1,0 +1,30 @@
+{
+  "name": "@khito/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "typecheck": "nuxt typecheck",
+    "deploy": "nuxt build && wrangler deploy --config wrangler.jsonc",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@nuxt/eslint": "^1.17.0",
+    "@nuxt/ui": "^4.10.0",
+    "@stylistic/eslint-plugin": "^5.10.0",
+    "@vueuse/nuxt": "^14.4.0",
+    "eslint": "^10.8.1",
+    "eslint-plugin-tailwindcss": "^4.2.0",
+    "nuxt": "^4.5.2",
+    "tailwindcss": "^4.3.3"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3",
+    "vue-tsc": "^3.3.9",
+    "wrangler": "^4.123.0"
+  }
+}
