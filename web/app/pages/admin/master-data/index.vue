@@ -1,67 +1,83 @@
 <template>
   <div class="min-h-screen bg-default">
-    <section class="mx-auto w-full max-w-5xl px-6 py-12">
+    <section class="mx-auto w-full max-w-3xl px-6 py-12">
       <div class="flex items-start justify-between gap-4">
         <div class="space-y-2">
           <h1 class="text-xl font-semibold text-highlighted">Master data</h1>
-          <p class="text-sm text-muted">Upload the customer and product files Khito can reference.</p>
+          <p class="text-sm text-muted">Files Khito can reference while working.</p>
         </div>
-        <UButton icon="i-lucide-upload" label="Upload file" @click="fileInput?.click()" />
+        <UButton icon="i-lucide-upload" label="Upload file" @click="uploadDialogOpen = true" />
       </div>
 
-      <input ref="fileInput" class="sr-only" type="file" accept=".csv,.json,text/csv,application/json" @change="handleFileUpload">
+      <UModal
+        v-model:open="uploadDialogOpen"
+        title="Upload master data"
+        description="Choose a CSV or JSON file."
+        :ui="{
+          content: '!h-[calc(100dvh-4rem)] !w-[calc(100vw-4rem)] !max-w-6xl',
+          header: 'p-6 sm:px-10',
+          body: 'flex items-center justify-center p-6 sm:px-10',
+        }"
+      >
+        <template #body>
+          <UFileUpload
+            v-model="selectedUpload"
+            accept=".csv,.json,text/csv,application/json"
+            class="w-full max-w-3xl"
+            description="Drop a file here or click to select it."
+            label="Upload a CSV or JSON file"
+            variant="area"
+          />
+        </template>
+      </UModal>
 
       <UAlert v-if="uploadError" class="mt-6" color="error" icon="i-lucide-circle-alert" title="Could not read this file" :description="uploadError" />
 
-      <div class="mt-8 grid gap-8 lg:grid-cols-3">
-        <section class="lg:col-span-1">
-          <p class="mb-3 text-sm font-medium text-highlighted">Uploaded files</p>
-          <div class="border-y border-default">
-            <button
-              v-for="file in uploadedFiles"
-              :key="file.id"
-              class="w-full border-b border-default px-1 py-4 text-left last:border-b-0"
-              :class="selectedFile?.id === file.id ? 'bg-elevated' : 'hover:bg-elevated/60'"
-              type="button"
-              @click="selectedFile = file"
-            >
-              <div class="flex items-center justify-between gap-3">
-                <p class="truncate text-sm font-medium text-highlighted">{{ file.name }}</p>
-                <UBadge color="neutral" variant="subtle">{{ file.format }}</UBadge>
-              </div>
-              <p class="mt-1 text-xs text-dimmed">{{ file.rows.length }} rows · {{ file.uploadedAt }}</p>
-            </button>
+      <div class="mt-8 border-y border-default">
+        <article v-for="file in uploadedFiles" :key="file.id" class="flex items-start justify-between gap-4 border-b border-default py-5 last:border-b-0">
+          <div>
+            <div class="flex items-center gap-2">
+              <p class="text-sm font-medium text-highlighted">{{ file.name }}</p>
+              <UBadge color="neutral" variant="subtle">{{ file.format }}</UBadge>
+            </div>
+            <p class="mt-2 text-sm text-muted">{{ file.rows.length }} rows · {{ getColumns(file).length }} columns · {{ file.uploadedAt }}</p>
           </div>
-        </section>
 
-        <section class="min-w-0 lg:col-span-2">
-          <template v-if="selectedFile">
-            <div class="flex items-center justify-between gap-4">
-              <div>
-                <p class="text-sm font-medium text-highlighted">{{ selectedFile.name }}</p>
-                <p class="mt-1 text-sm text-muted">Previewing {{ Math.min(selectedFile.rows.length, 5) }} of {{ selectedFile.rows.length }} rows</p>
-              </div>
-              <UBadge color="success" variant="subtle">Ready</UBadge>
-            </div>
+          <UButton color="neutral" variant="ghost" icon="i-lucide-arrow-up-right" :aria-label="`View ${file.name}`" @click="openViewerId = file.id" />
 
-            <div class="mt-5 overflow-x-auto border-y border-default">
-              <table class="w-full min-w-max text-left text-sm">
-                <thead class="border-b border-default bg-elevated/50 text-dimmed">
-                  <tr>
-                    <th v-for="column in selectedColumns" :key="column" class="px-4 py-3 font-medium whitespace-nowrap">{{ column }}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(row, rowIndex) in selectedFile.rows.slice(0, 5)" :key="rowIndex" class="border-b border-default last:border-b-0">
-                    <td v-for="column in selectedColumns" :key="column" class="px-4 py-3 whitespace-nowrap text-muted">{{ formatValue(row[column]) }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </template>
+          <UModal
+            :open="openViewerId === file.id"
+            :title="file.name"
+            :description="`${file.rows.length} rows · ${getColumns(file).length} columns`"
+            :ui="{
+              content: '!h-[calc(100dvh-4rem)] !w-[calc(100vw-4rem)] !max-w-6xl',
+              header: 'p-6 sm:px-10',
+              body: 'p-0',
+            }"
+            @update:open="setViewerOpen(file.id, $event)"
+          >
+            <template #body>
+              <section class="overflow-hidden">
+                <div class="flex justify-end border-b border-default px-6 py-4 sm:px-10"><UBadge color="success" variant="subtle">Database view</UBadge></div>
 
-          <div v-else class="border-y border-default py-10 text-sm text-muted">Upload a CSV or JSON file to preview its rows.</div>
-        </section>
+                <div class="h-[calc(100dvh-13rem)] overflow-auto">
+                  <table class="w-full min-w-max text-left text-sm">
+                    <thead class="sticky top-0 border-b border-default bg-elevated text-dimmed">
+                      <tr>
+                        <th v-for="column in getColumns(file)" :key="column" class="px-4 py-3 font-medium whitespace-nowrap">{{ column }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(row, rowIndex) in file.rows" :key="rowIndex" class="border-b border-default last:border-b-0">
+                        <td v-for="column in getColumns(file)" :key="column" class="max-w-64 truncate px-4 py-3 text-muted">{{ formatValue(row[column]) }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </template>
+          </UModal>
+        </article>
       </div>
     </section>
   </div>
@@ -79,8 +95,10 @@ type UploadedMasterDataFile = {
   uploadedAt: string;
 };
 
-const fileInput = ref<HTMLInputElement | null>(null);
 const uploadError = ref("");
+const openViewerId = ref<string | null>(null);
+const selectedUpload = ref<File | null>(null);
+const uploadDialogOpen = ref(false);
 const uploadedFiles = ref<UploadedMasterDataFile[]>([
   {
     id: "customers-json",
@@ -105,15 +123,8 @@ const uploadedFiles = ref<UploadedMasterDataFile[]>([
     ],
   },
 ]);
-const selectedFile = ref<UploadedMasterDataFile | null>(uploadedFiles.value[0] ?? null);
 
-const selectedColumns = computed(() => Object.keys(selectedFile.value?.rows[0] ?? {}));
-
-async function handleFileUpload(event: Event) {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
-  if (!file) return;
-
+async function uploadMasterDataFile(file: File) {
   uploadError.value = "";
 
   try {
@@ -128,19 +139,31 @@ async function handleFileUpload(event: Event) {
     };
 
     uploadedFiles.value.unshift(uploadedFile);
-    selectedFile.value = uploadedFile;
+    uploadDialogOpen.value = false;
   }
   catch (error) {
     uploadError.value = error instanceof Error ? error.message : "Choose a valid CSV or JSON file.";
   }
   finally {
-    input.value = "";
+    selectedUpload.value = null;
   }
 }
+
+watch(selectedUpload, (file) => {
+  if (file) void uploadMasterDataFile(file);
+});
 
 function formatValue(value: MasterDataValue | undefined) {
   if (value === null || value === undefined) return "—";
   return String(value);
+}
+
+function getColumns(file: UploadedMasterDataFile) {
+  return Object.keys(file.rows[0] ?? {});
+}
+
+function setViewerOpen(fileId: string, isOpen: boolean) {
+  openViewerId.value = isOpen ? fileId : null;
 }
 
 function getFileFormat(name: string): UploadedMasterDataFile["format"] {
