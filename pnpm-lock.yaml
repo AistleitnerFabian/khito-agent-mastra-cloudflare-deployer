@@ -56,6 +56,9 @@ importers:
       '@nuxt/ui':
         specifier: ^4.10.0
         version: 4.10.0(31cdf919a83c0152342b5c6dafc9320d)
+      '@panzoom/panzoom':
+        specifier: ^4.6.2
+        version: 4.6.2
       '@stylistic/eslint-plugin':
         specifier: ^5.10.0
         version: 5.10.0(eslint@10.8.1(jiti@2.7.0))
@@ -1642,6 +1645,9 @@ packages:
 
   '@oxc-project/types@0.144.0':
     resolution: {integrity: sha512-nuhZIOLuI6TFQ32I/WnUx+SCPY7SdSKwgnFHydAuoS1+Z4BRcaP+RRJmGzl9lw+0OFF7UmaESf7KQRXaNLHypg==}
+
+  '@panzoom/panzoom@4.6.2':
+    resolution: {integrity: sha512-Zn3B5/hwa6eYIPRSKX0xf2clv8nviTX8AnAU5kU/EugiTDhG41ya2wlBqYrZJYCWQROr/5XkWObZhIkepi89qw==}
 
   '@parcel/watcher-wasm@2.6.0':
     resolution: {integrity: sha512-dtjbDxKSDPQ8AmA+pS4OFaHE1FKrjtGpLGBxw85uKFkRorjNbvDM/aFPgqosu40wprbp1xw2ZSxIKqghCUHe2w==}
@@ -8846,6 +8852,8 @@ snapshots:
       magic-string: 0.30.21
 
   '@oxc-project/types@0.144.0': {}
+
+  '@panzoom/panzoom@4.6.2': {}
 
   '@parcel/watcher-wasm@2.6.0':
     dependencies:
