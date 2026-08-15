@@ -12,6 +12,13 @@
   --ui-bg: var(--khito-bg);
 }
 
+.dark {
+  --khito-bg: #171715;
+  --khito-ink: #f5f5f4;
+  --khito-border-soft: #353531;
+  --ui-bg: var(--khito-bg);
+}
+
 html,
 body,
 #__nuxt {

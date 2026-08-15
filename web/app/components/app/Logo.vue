@@ -1,6 +1,6 @@
 <template>
   <div class="flex size-5 items-center gap-3">
-    <img :src="logoBlackUrl" alt="Khito" class="size-full">
+    <img :src="logoBlackUrl" alt="Khito" class="size-full dark:invert">
   </div>
 </template>
 

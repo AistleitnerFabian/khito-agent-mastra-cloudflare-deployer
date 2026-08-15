@@ -86,6 +86,23 @@
         list: 'flex flex-col gap-1',
       }"
     />
+
+    <div class="mt-auto border-t border-default p-2">
+      <UButton
+        v-if="!open"
+        :icon="isDark ? 'i-lucide-moon' : 'i-lucide-sun'"
+        color="neutral"
+        variant="ghost"
+        class="w-full"
+        :aria-label="isDark ? 'Use light theme' : 'Use dark theme'"
+        @click="isDark = !isDark"
+      />
+      <div v-else class="flex items-center gap-2 px-2 py-1.5">
+        <UIcon :name="isDark ? 'i-lucide-moon' : 'i-lucide-sun'" class="size-4 text-muted" />
+        <span class="text-xs text-highlighted">Dark mode</span>
+        <USwitch v-model="isDark" class="ms-auto" aria-label="Toggle dark mode" />
+      </div>
+    </div>
   </aside>
 </template>
 
@@ -93,6 +110,15 @@
 import type { NavigationMenuItem } from "@nuxt/ui";
 
 const open = ref(true);
+const isDark = useDark({ storageKey: "khito-theme" });
+const { D_A_R_K: darkShortcut } = useMagicKeys();
+
+watch(
+  () => darkShortcut?.value,
+  (isPressed) => {
+    if (isPressed) isDark.value = !isDark.value;
+  },
+);
 
 const chatNavigationItems: NavigationMenuItem[] = [
   {
@@ -112,7 +138,7 @@ const workspaceNavigationItems: NavigationMenuItem[] = [
   {
     label: "Documents",
     icon: "i-lucide-files",
-    disabled: true,
+    to: "/documents",
   },
   {
     label: "Archive",
