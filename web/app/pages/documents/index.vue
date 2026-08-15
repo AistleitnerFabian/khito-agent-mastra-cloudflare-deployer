@@ -77,15 +77,14 @@
         <button
           v-for="field in overlayFields"
           :key="field.id"
-          class="absolute flex items-center border transition-colors"
-          :class="field.id === activeField ? 'gap-1 border-primary bg-primary px-2 py-1 text-inverted' : 'size-5 justify-center border-primary/70 bg-default text-primary hover:bg-primary/10'"
+          class="absolute grid size-5 place-items-center border transition-colors"
+          :class="field.id === activeField ? 'border-primary bg-primary text-inverted' : 'border-primary/70 bg-default text-primary hover:bg-primary/10'"
           :style="field.position"
           type="button"
           :aria-label="`Locate ${field.label}`"
           @click="activeField = field.id"
         >
-          <span :class="field.id === activeField ? 'grid size-3 place-items-center border border-current text-[9px] leading-none' : 'text-[10px] leading-none font-medium'">{{ field.index }}</span>
-          <span v-if="field.id === activeField" class="text-[10px] leading-none font-medium">{{ field.label }}</span>
+          <span class="text-[10px] leading-none font-medium">{{ field.index }}</span>
         </button>
       </article>
     </main>
@@ -103,8 +102,8 @@ const documentData = reactive({
 
 const activeField = ref("project");
 const horizontalFieldUi = {
-  root: "grid grid-cols-[5.25rem_minmax(0,1fr)] items-start gap-3",
-  labelWrapper: "pt-2 text-right",
+  root: "grid grid-cols-[7rem_minmax(0,1fr)] items-start gap-3",
+  labelWrapper: "pt-2 text-left",
   label: "text-xs font-normal text-muted",
   container: "w-full min-w-0 justify-self-end",
 };
@@ -114,35 +113,35 @@ const overlayFields = [
     id: "project",
     index: 1,
     label: "Project",
-    position: { top: "15.5%", left: "8%" },
+    position: { top: "15.5%", left: "0" },
     bounds: { top: "15.5%", left: "36%", width: "38%", height: "2.4%" },
   },
   {
     id: "position",
     index: 2,
     label: "Position",
-    position: { top: "18%", left: "8%" },
+    position: { top: "19.5%", left: "0" },
     bounds: { top: "17.8%", left: "36%", width: "56%", height: "4.4%" },
   },
   {
     id: "glass-type",
     index: 3,
     label: "Glass type",
-    position: { top: "24%", left: "8%" },
+    position: { top: "24%", left: "0" },
     bounds: { top: "23.9%", left: "40%", width: "43%", height: "2.2%" },
   },
   {
     id: "glass-build-up",
     index: 4,
     label: "Glass build-up",
-    position: { top: "26.5%", left: "8%" },
+    position: { top: "28%", left: "0" },
     bounds: { top: "26.5%", left: "40%", width: "42%", height: "14.5%" },
   },
   {
     id: "remark",
     index: 5,
     label: "Remark",
-    position: { top: "47%", left: "8%" },
+    position: { top: "47%", left: "0" },
     bounds: { top: "46.6%", left: "40%", width: "31%", height: "2.1%" },
   },
 ];
