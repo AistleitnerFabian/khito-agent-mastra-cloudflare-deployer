@@ -11,5 +11,19 @@
       "binding": "KHITO_AGENT",
       "service": "khito-agent"
     }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "INBOX_FILES",
+      "bucket_name": "khito-sources"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DATABASE",
+      "database_name": "khito_db",
+      "database_id": "b54926ee-7e27-4685-88fd-52cdd1474a42",
+      "migrations_dir": "migrations"
+    }
   ]
 }

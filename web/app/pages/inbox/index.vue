@@ -7,7 +7,7 @@
             <p class="text-xs font-medium text-dimmed">Inbox</p>
             <h1 class="mt-1 text-lg font-semibold text-highlighted">Forwarded emails</h1>
           </div>
-          <UPopover>
+          <UPopover v-model:open="uploadPopoverOpen">
             <UButton icon="i-lucide-plus" color="neutral" variant="ghost" size="xs" aria-label="Upload file" />
 
             <template #content>
@@ -15,13 +15,16 @@
                 <p class="text-sm font-medium text-highlighted">Upload file</p>
                 <p class="mt-1 text-xs leading-5 text-muted">Add a file to the Inbox for review.</p>
                 <UFileUpload
-                  v-model="uploadedFile"
+                  v-model="uploadedFiles"
                   class="mt-3"
+                  multiple
                   size="sm"
                   accept="application/pdf,image/*,.doc,.docx,.xlsx"
-                  label="Choose a file"
+                  label="Drop files here or choose files"
                   description="PDF, image, Word, or Excel"
                 />
+                <p v-if="uploadError" class="mt-3 text-xs text-error">{{ uploadError }}</p>
+                <UButton class="mt-3" block size="sm" label="Create" :disabled="!uploadedFiles.length" :loading="uploadingFile" @click="uploadFiles" />
               </div>
             </template>
           </UPopover>
@@ -98,6 +101,14 @@ type ForwardedEmail = {
   status: "Needs triage" | "Ready to create" | "Not a document";
 };
 
+type StoredInboxFile = {
+  id: string;
+  name: string;
+  contentType: string;
+  size: number;
+  uploadedAt: string;
+};
+
 const forwardedEmails = ref<ForwardedEmail[]>([
   {
     id: "supplier-order-update",
@@ -139,7 +150,10 @@ const forwardedEmails = ref<ForwardedEmail[]>([
 
 const selectedEmailId = ref("supplier-order-update");
 const selectedEmail = computed(() => forwardedEmails.value.find((email) => email.id === selectedEmailId.value));
-const uploadedFile = ref<File | null>(null);
+const uploadedFiles = ref<File[]>([]);
+const uploadPopoverOpen = ref(false);
+const uploadingFile = ref(false);
+const uploadError = ref("");
 const teamMemberOptions = ["Unassigned", "Fabian Aistleitner", "Lena Hoffmann", "Max Berger"];
 
 function extractDocument() {
@@ -151,4 +165,68 @@ function ignoreEmail() {
   if (!selectedEmail.value) return;
   selectedEmail.value.status = "Not a document";
 }
+
+function inboxEntryFromFile(file: StoredInboxFile): ForwardedEmail {
+  return {
+    id: file.id,
+    sender: "File upload",
+    sourceType: "File upload",
+    forwardedBy: "Inbox upload",
+    subject: file.name,
+    receivedAt: formatUploadedAt(file.uploadedAt),
+    preview: `${file.contentType} · ${formatFileSize(file.size)}`,
+    body: `File uploaded to the Inbox.\n\n${file.name}`,
+    assignee: "Unassigned",
+    status: "Needs triage",
+  };
+}
+
+function formatUploadedAt(uploadedAt: string) {
+  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(uploadedAt));
+}
+
+function formatFileSize(size: number) {
+  if (size < 1024 * 1024) return `${Math.max(1, Math.round(size / 1024))} KB`;
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+async function loadInboxFiles() {
+  try {
+    const files = await $fetch<StoredInboxFile[]>("/api/inbox/files");
+    forwardedEmails.value.push(...files.map(inboxEntryFromFile));
+  }
+  catch {}
+}
+
+async function uploadFiles() {
+  if (!uploadedFiles.value.length) return;
+
+  uploadingFile.value = true;
+  uploadError.value = "";
+
+  try {
+    const files = await Promise.all(uploadedFiles.value.map(uploadFile));
+    const inboxEntries = files.map(inboxEntryFromFile);
+
+    forwardedEmails.value.unshift(...inboxEntries);
+    selectedEmailId.value = inboxEntries[0]?.id ?? selectedEmailId.value;
+    uploadedFiles.value = [];
+    uploadPopoverOpen.value = false;
+  }
+  catch (error) {
+    uploadError.value = error instanceof Error ? error.message : "The file could not be uploaded.";
+  }
+  finally {
+    uploadingFile.value = false;
+  }
+}
+
+async function uploadFile(file: File): Promise<StoredInboxFile> {
+  const formData = new FormData();
+  formData.set("file", file);
+
+  return $fetch<StoredInboxFile>("/api/inbox/files", { method: "POST", body: formData });
+}
+
+onMounted(loadInboxFiles);
 </script>
