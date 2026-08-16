@@ -32,6 +32,11 @@
       </header>
 
       <div class="min-h-0 flex-1 overflow-y-auto">
+        <div v-if="!forwardedEmails.length" class="px-5 py-10 text-center">
+          <UIcon name="i-lucide-inbox" class="mx-auto size-5 text-dimmed" />
+          <p class="mt-3 text-sm font-medium text-highlighted">Your Inbox is empty</p>
+          <p class="mt-1 text-xs leading-5 text-muted">Upload a file to add it for review.</p>
+        </div>
         <article
           v-for="email in forwardedEmails"
           :key="email.id"
@@ -61,8 +66,21 @@
 
     <section v-if="selectedEmail" class="flex min-w-0 flex-1 flex-col">
       <header class="border-b border-default px-6 py-5">
-        <p class="text-xs font-medium text-dimmed">Forwarded by {{ selectedEmail.forwardedBy }}</p>
-        <h2 class="mt-1 text-xl font-semibold text-highlighted">{{ selectedEmail.subject }}</h2>
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <p class="text-xs font-medium text-dimmed">Forwarded by {{ selectedEmail.forwardedBy }}</p>
+            <h2 class="mt-1 text-xl font-semibold text-highlighted">{{ selectedEmail.subject }}</h2>
+          </div>
+          <UButton
+            color="neutral"
+            variant="ghost"
+            icon="i-lucide-info"
+            size="sm"
+            aria-label="Show Docling output"
+            :aria-pressed="doclingOutputOpen"
+            @click="toggleDoclingOutput"
+          />
+        </div>
         <div class="mt-4 flex items-center gap-3 text-xs text-muted">
           <span>{{ selectedEmail.sender }}</span>
           <span aria-hidden="true">•</span>
@@ -70,8 +88,22 @@
         </div>
       </header>
 
+      <section v-if="doclingOutputOpen" class="border-b border-default bg-elevated/30 px-6 py-4">
+        <p class="text-sm font-medium text-highlighted">Docling output</p>
+        <p v-if="doclingOutputError" class="mt-2 text-sm text-error">{{ doclingOutputError }}</p>
+        <p v-else-if="doclingOutputLoading" class="mt-2 text-sm text-muted">Loading extraction…</p>
+        <template v-else-if="doclingOutput">
+          <p class="mt-2 text-xs text-muted">
+            {{ doclingOutput.processingStatus }}
+            <template v-if="doclingOutput.processingTime !== undefined"> · {{ doclingOutput.processingTime.toFixed(2) }}s</template>
+          </p>
+          <pre class="mt-3 max-h-72 overflow-auto rounded-md bg-default p-3 text-xs leading-5 whitespace-pre-wrap text-default">{{ doclingOutputText }}</pre>
+        </template>
+        <p v-else class="mt-2 text-sm text-muted">{{ doclingOutputStatus || "Docling has not produced an extraction for this item yet." }}</p>
+      </section>
+
       <div class="flex min-h-0 flex-1 flex-col xl:flex-row">
-        <article class="max-w-3xl flex-1 px-6 py-7 text-sm leading-7 text-default whitespace-pre-line">
+        <article class="max-w-3xl flex-1 px-6 py-7 text-sm leading-7 whitespace-pre-line text-default">
           {{ selectedEmail.body }}
         </article>
 
@@ -82,6 +114,13 @@
           </div>
 
         </aside>
+      </div>
+    </section>
+    <section v-else class="flex flex-1 items-center justify-center px-6 text-center">
+      <div>
+        <UIcon name="i-lucide-file-search" class="mx-auto size-6 text-dimmed" />
+        <p class="mt-3 text-sm font-medium text-highlighted">Select an Inbox item</p>
+        <p class="mt-1 text-sm text-muted">Choose an uploaded file to review it.</p>
       </div>
     </section>
   </div>
@@ -99,6 +138,8 @@ type ForwardedEmail = {
   body: string;
   assignee: string;
   status: "Needs triage" | "Ready to create" | "Not a document";
+  processingStatus: StoredInboxFile["processingStatus"];
+  storedInboxItem: boolean;
 };
 
 type StoredInboxFile = {
@@ -106,55 +147,38 @@ type StoredInboxFile = {
   name: string;
   contentType: string;
   size: number;
+  processingStatus: "pending" | "processing" | "completed" | "failed";
   uploadedAt: string;
 };
 
-const forwardedEmails = ref<ForwardedEmail[]>([
-  {
-    id: "supplier-order-update",
-    sender: "orders@alpine.example",
-    sourceType: "Email",
-    forwardedBy: "Fabian Aistleitner",
-    subject: "Order update – Alpine Interiors",
-    receivedAt: "10:42",
-    preview: "Please find the revised order confirmation attached. The delivery date has changed...",
-    body: "Hi Fabian,\n\nPlease find the revised order confirmation attached. The delivery date has changed to 24 August.\n\nCould you please confirm that this still works for you?\n\nBest regards,\nAlpine Interiors",
-    assignee: "Unassigned",
-    status: "Needs triage",
-  },
-  {
-    id: "pricing-request",
-    sender: "purchasing@nordlicht.example",
-    sourceType: "Email",
-    forwardedBy: "Fabian Aistleitner",
-    subject: "Request for updated pricing",
-    receivedAt: "Yesterday",
-    preview: "We are preparing our next purchase order and would appreciate an updated price list...",
-    body: "Hello,\n\nWe are preparing our next purchase order and would appreciate an updated price list for the Q3 catalogue.\n\nThank you,\nNordlicht purchasing team",
-    assignee: "Fabian Aistleitner",
-    status: "Needs triage",
-  },
-  {
-    id: "delivery-address-upload",
-    sender: "Fabian Aistleitner",
-    sourceType: "File upload",
-    forwardedBy: "Fabian Aistleitner",
-    subject: "Delivery-address service request.pdf",
-    receivedAt: "Monday",
-    preview: "Uploaded file containing a request to confirm the delivery address before dispatch...",
-    body: "File uploaded by Fabian.\n\nThe document asks for confirmation of the delivery address before replacement-part dispatch.",
-    assignee: "Unassigned",
-    status: "Needs triage",
-  },
-]);
+type DoclingOutput = {
+  document: unknown;
+  markdown: string;
+  processingTime?: number;
+  processingStatus: "completed";
+};
 
-const selectedEmailId = ref("supplier-order-update");
-const selectedEmail = computed(() => forwardedEmails.value.find((email) => email.id === selectedEmailId.value));
+const forwardedEmails = ref<ForwardedEmail[]>([]);
+
+const selectedEmailId = ref<string | null>(null);
+const selectedEmail = computed(() => forwardedEmails.value.find(email => email.id === selectedEmailId.value));
 const uploadedFiles = ref<File[]>([]);
 const uploadPopoverOpen = ref(false);
 const uploadingFile = ref(false);
 const uploadError = ref("");
+const doclingOutputOpen = ref(false);
+const doclingOutput = ref<DoclingOutput | null>(null);
+const doclingOutputError = ref("");
+const doclingOutputLoading = ref(false);
+const doclingOutputStatus = ref("");
 const teamMemberOptions = ["Unassigned", "Fabian Aistleitner", "Lena Hoffmann", "Max Berger"];
+
+const doclingOutputText = computed(() => {
+  if (!doclingOutput.value) return "";
+  return doclingOutput.value.markdown || JSON.stringify(doclingOutput.value.document, null, 2);
+});
+
+const hasActiveDoclingJobs = computed(() => forwardedEmails.value.some(email => email.processingStatus === "pending" || email.processingStatus === "processing"));
 
 function extractDocument() {
   if (!selectedEmail.value) return;
@@ -178,6 +202,8 @@ function inboxEntryFromFile(file: StoredInboxFile): ForwardedEmail {
     body: `File uploaded to the Inbox.\n\n${file.name}`,
     assignee: "Unassigned",
     status: "Needs triage",
+    storedInboxItem: true,
+    processingStatus: file.processingStatus,
   };
 }
 
@@ -193,9 +219,15 @@ function formatFileSize(size: number) {
 async function loadInboxFiles() {
   try {
     const files = await $fetch<StoredInboxFile[]>("/api/inbox/files");
-    forwardedEmails.value.push(...files.map(inboxEntryFromFile));
+    forwardedEmails.value = files.map(inboxEntryFromFile);
+
+    if (!selectedEmail.value) {
+      selectedEmailId.value = forwardedEmails.value[0]?.id ?? null;
+    }
   }
-  catch {}
+  catch {
+    return;
+  }
 }
 
 async function uploadFiles() {
@@ -228,5 +260,64 @@ async function uploadFile(file: File): Promise<StoredInboxFile> {
   return $fetch<StoredInboxFile>("/api/inbox/files", { method: "POST", body: formData });
 }
 
-onMounted(loadInboxFiles);
+async function loadDoclingOutput() {
+  const email = selectedEmail.value;
+  if (!email?.storedInboxItem) return;
+
+  doclingOutputLoading.value = true;
+  doclingOutputError.value = "";
+  doclingOutputStatus.value = "";
+
+  try {
+    const response = await $fetch<DoclingOutput | { processingError: string | null; processingStatus: string }>(`/api/inbox/files/${email.id}/docling`);
+
+    if ("document" in response) {
+      doclingOutput.value = response;
+      return;
+    }
+
+    doclingOutput.value = null;
+    doclingOutputError.value = response.processingError || "";
+    doclingOutputStatus.value = response.processingError ? "" : `Docling is ${response.processingStatus}.`;
+  }
+  catch (error) {
+    doclingOutput.value = null;
+    doclingOutputError.value = error instanceof Error ? error.message : "The Docling output could not be loaded.";
+  }
+  finally {
+    doclingOutputLoading.value = false;
+  }
+}
+
+function toggleDoclingOutput() {
+  doclingOutputOpen.value = !doclingOutputOpen.value;
+
+  if (doclingOutputOpen.value) {
+    void loadDoclingOutput();
+  }
+}
+
+watch(selectedEmailId, () => {
+  doclingOutput.value = null;
+  doclingOutputError.value = "";
+  doclingOutputStatus.value = "";
+  doclingOutputOpen.value = false;
+});
+
+let inboxRefreshTimer: number | undefined;
+
+onMounted(() => {
+  void loadInboxFiles();
+  inboxRefreshTimer = window.setInterval(() => {
+    if (hasActiveDoclingJobs.value) {
+      void loadInboxFiles();
+    }
+  }, 5_000);
+});
+
+onBeforeUnmount(() => {
+  if (inboxRefreshTimer) {
+    clearInterval(inboxRefreshTimer);
+  }
+});
 </script>

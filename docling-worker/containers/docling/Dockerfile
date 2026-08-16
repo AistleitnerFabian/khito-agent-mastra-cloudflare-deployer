@@ -1,4 +1,4 @@
-FROM quay.io/docling-project/docling-serve:v1.21.0
+FROM ghcr.io/docling-project/docling-serve-cpu:v1.30.0
 
 ENV DOCLING_DEVICE=cpu
 ENV DOCLING_SERVE_ENG_LOC_NUM_WORKERS=1

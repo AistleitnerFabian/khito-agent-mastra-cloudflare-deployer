@@ -46,17 +46,18 @@ export class DoclingContainer extends Container {
 
   async extract(sourceKey: string): Promise<DoclingExtraction> {
     try {
-      const response = await this.containerFetch("/v1/convert/source", {
+      const response = await this.containerFetch("http://container/v1/convert/source", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          http_sources: [{ url: `http://inbox.r2/${encodeURIComponent(sourceKey)}` }],
+          sources: [{ kind: "http", url: `http://inbox.r2/${encodeURIComponent(sourceKey)}` }],
           options: { to_formats: ["md", "json"] },
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`Docling returned ${response.status}.`);
+        const details = await response.text();
+        throw new Error(details || `Docling returned ${response.status}.`);
       }
 
       const result = await response.json<DoclingResponse>();
