@@ -7,6 +7,24 @@
             <p class="text-xs font-medium text-dimmed">Inbox</p>
             <h1 class="mt-1 text-lg font-semibold text-highlighted">Forwarded emails</h1>
           </div>
+          <UPopover>
+            <UButton icon="i-lucide-plus" color="neutral" variant="ghost" size="xs" aria-label="Upload file" />
+
+            <template #content>
+              <div class="w-64 p-3">
+                <p class="text-sm font-medium text-highlighted">Upload file</p>
+                <p class="mt-1 text-xs leading-5 text-muted">Add a file to the Inbox for review.</p>
+                <UFileUpload
+                  v-model="uploadedFile"
+                  class="mt-3"
+                  size="sm"
+                  accept="application/pdf,image/*,.doc,.docx,.xlsx"
+                  label="Choose a file"
+                  description="PDF, image, Word, or Excel"
+                />
+              </div>
+            </template>
+          </UPopover>
         </div>
       </header>
 
@@ -19,11 +37,15 @@
         >
           <button class="w-full px-5 pt-4 text-left" type="button" @click="selectedEmailId = email.id">
             <div class="flex items-center justify-between gap-3">
-              <p class="truncate text-sm font-medium text-highlighted">{{ email.sender }}</p>
+              <div class="flex min-w-0 items-center gap-2">
+                <UIcon :name="email.sourceType === 'Email' ? 'i-lucide-mail' : 'i-lucide-file-up'" class="size-3.5 shrink-0 text-dimmed" />
+                <p class="truncate text-sm font-medium text-highlighted">{{ email.sender }}</p>
+              </div>
               <time class="shrink-0 text-xs text-dimmed">{{ email.receivedAt }}</time>
             </div>
             <p class="mt-1 truncate text-sm text-default">{{ email.subject }}</p>
             <p class="mt-1 line-clamp-2 text-xs leading-5 text-muted">{{ email.preview }}</p>
+            <UBadge class="mt-3" color="neutral" variant="subtle" size="xs">{{ email.sourceType }}</UBadge>
             <p v-if="email.status !== 'Needs triage'" class="mt-3 text-xs text-dimmed">{{ email.status }}</p>
           </button>
           <div class="flex items-center gap-1 px-5 pt-2 pb-3 text-xs text-dimmed">
@@ -66,6 +88,7 @@
 type ForwardedEmail = {
   id: string;
   sender: string;
+  sourceType: "Email" | "File upload";
   forwardedBy: string;
   subject: string;
   receivedAt: string;
@@ -79,6 +102,7 @@ const forwardedEmails = ref<ForwardedEmail[]>([
   {
     id: "supplier-order-update",
     sender: "orders@alpine.example",
+    sourceType: "Email",
     forwardedBy: "Fabian Aistleitner",
     subject: "Order update – Alpine Interiors",
     receivedAt: "10:42",
@@ -90,6 +114,7 @@ const forwardedEmails = ref<ForwardedEmail[]>([
   {
     id: "pricing-request",
     sender: "purchasing@nordlicht.example",
+    sourceType: "Email",
     forwardedBy: "Fabian Aistleitner",
     subject: "Request for updated pricing",
     receivedAt: "Yesterday",
@@ -99,13 +124,14 @@ const forwardedEmails = ref<ForwardedEmail[]>([
     status: "Needs triage",
   },
   {
-    id: "delivery-question",
-    sender: "service@bergundtal.example",
+    id: "delivery-address-upload",
+    sender: "Fabian Aistleitner",
+    sourceType: "File upload",
     forwardedBy: "Fabian Aistleitner",
-    subject: "Question about delivery address",
+    subject: "Delivery-address service request.pdf",
     receivedAt: "Monday",
-    preview: "Before dispatching the replacement parts, could you confirm the receiving address?...",
-    body: "Hi Fabian,\n\nBefore dispatching the replacement parts, could you confirm the receiving address for this service request?\n\nKind regards,\nBerg & Tal service team",
+    preview: "Uploaded file containing a request to confirm the delivery address before dispatch...",
+    body: "File uploaded by Fabian.\n\nThe document asks for confirmation of the delivery address before replacement-part dispatch.",
     assignee: "Unassigned",
     status: "Needs triage",
   },
@@ -113,6 +139,7 @@ const forwardedEmails = ref<ForwardedEmail[]>([
 
 const selectedEmailId = ref("supplier-order-update");
 const selectedEmail = computed(() => forwardedEmails.value.find((email) => email.id === selectedEmailId.value));
+const uploadedFile = ref<File | null>(null);
 const teamMemberOptions = ["Unassigned", "Fabian Aistleitner", "Lena Hoffmann", "Max Berger"];
 
 function extractDocument() {

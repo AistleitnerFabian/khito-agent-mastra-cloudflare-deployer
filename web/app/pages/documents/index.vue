@@ -81,8 +81,8 @@
 
               <div
                 v-if="activeOverlay"
-                class="pointer-events-none absolute border-2 border-primary bg-primary/5"
-                :style="boundingBoxStyle(activeOverlay.bounds)"
+                class="pointer-events-none absolute bg-primary/20"
+                :style="highlightStyle(activeOverlay.bounds)"
               >
                 <span class="absolute left-0 bg-primary px-1.5 py-0.5 text-[10px] leading-none whitespace-nowrap text-inverted" :style="boundingBoxLabelStyle">
                   {{ activeOverlay.index }} · {{ activeOverlay.label }}
@@ -192,11 +192,8 @@ function resetPdfZoom() {
   documentScale.value = defaultZoom / 100;
 }
 
-function boundingBoxStyle(bounds: Record<string, string>) {
-  return {
-    ...bounds,
-    borderWidth: `${2 / documentScale.value}px`,
-  };
+function highlightStyle(bounds: Record<string, string>) {
+  return bounds;
 }
 
 function markerStyle(field: typeof overlayFields[number]) {
