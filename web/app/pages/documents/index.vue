@@ -9,6 +9,10 @@
         <UBadge color="warning" variant="subtle" size="sm">Draft</UBadge>
       </div>
 
+      <UFormField class="mt-4" label="Assigned to">
+        <USelect v-model="documentAssignee" :items="teamMemberOptions" class="w-full" />
+      </UFormField>
+
       <USeparator class="my-6" />
 
       <form class="space-y-4" @submit.prevent>
@@ -117,6 +121,9 @@ const documentData = reactive({
   glassBuildUp: "Outside 6 VSG from Float 0,38\nMiddle 4 Floatglass\nInside 6 VSG from Float 0,38\nTotal ~51 mm",
   remark: "Sonnenschutzglas g=0,4",
 });
+
+const documentAssignee = ref("Fabian Aistleitner");
+const teamMemberOptions = ["Unassigned", "Fabian Aistleitner", "Lena Hoffmann", "Max Berger"];
 
 const activeField = ref("project");
 const defaultZoom = 100;

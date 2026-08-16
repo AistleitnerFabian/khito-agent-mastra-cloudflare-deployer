@@ -133,7 +133,7 @@ const workspaceNavigationItems: NavigationMenuItem[] = [
   {
     label: "Inbox",
     icon: "i-lucide-inbox",
-    disabled: true,
+    to: "/inbox",
   },
   {
     label: "Documents",
