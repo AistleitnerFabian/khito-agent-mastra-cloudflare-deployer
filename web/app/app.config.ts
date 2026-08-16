@@ -12,7 +12,7 @@ export default defineAppConfig({
         {
           color: "primary",
           variant: "solid",
-          class: "bg-primary text-default shadow-none hover:bg-primary hover:brightness-95 active:bg-primary active:brightness-95",
+          class: "bg-primary text-inverted shadow-none hover:bg-primary hover:brightness-95 active:bg-primary active:brightness-95 dark:text-primary-950",
         },
         {
           color: "neutral",

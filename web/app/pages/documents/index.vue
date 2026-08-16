@@ -168,8 +168,7 @@ function fieldClass(fieldId: string) {
 }
 
 function resetPdfZoom() {
-  panzoom?.zoom(defaultZoom / 100, { animate: false });
-  panzoom?.pan(0, 0, { animate: false });
+  panzoom?.reset({ animate: false });
 }
 
 function boundingBoxStyle(bounds: Record<string, string>) {
@@ -197,7 +196,15 @@ onMounted(() => {
   const viewer = viewerElement.value;
   if (!target || !viewer) return;
 
-  panzoom = Panzoom(target, { canvas: true, cursor: "grab", maxScale: maxZoom / 100, minScale: minZoom / 100, panOnlyWhenZoomed: true, step: 0.25 });
+  panzoom = Panzoom(target, {
+    canvas: true,
+    contain: "outside",
+    cursor: "grab",
+    maxScale: maxZoom / 100,
+    minScale: minZoom / 100,
+    panOnlyWhenZoomed: true,
+    step: 0.25,
+  });
   viewer.addEventListener("wheel", panzoom.zoomWithWheel);
   target.addEventListener("panzoomchange", (event) => {
     documentScale.value = (event as CustomEvent<{ scale: number }>).detail.scale;
