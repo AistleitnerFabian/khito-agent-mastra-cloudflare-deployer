@@ -81,7 +81,7 @@
                 class="pointer-events-none absolute border-2 border-primary bg-primary/5"
                 :style="boundingBoxStyle(activeOverlay.bounds)"
               >
-                <span class="absolute -top-5 left-0 bg-primary px-1.5 py-0.5 text-[10px] leading-none whitespace-nowrap text-inverted" :style="boundingBoxLabelStyle">
+                <span class="absolute left-0 bg-primary px-1.5 py-0.5 text-[10px] leading-none whitespace-nowrap text-inverted" :style="boundingBoxLabelStyle">
                   {{ activeOverlay.index }} · {{ activeOverlay.label }}
                 </span>
               </div>
@@ -219,8 +219,9 @@ function handlePanzoomChange(event: Event) {
 }
 
 const boundingBoxLabelStyle = computed(() => ({
-  transform: `scale(${1 / documentScale.value})`,
-  transformOrigin: "bottom left",
+  top: "0px",
+  transform: `scale(${1 / documentScale.value}) translateY(-100%)`,
+  transformOrigin: "top left",
 }));
 
 onMounted(() => {
