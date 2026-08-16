@@ -55,7 +55,16 @@
             <p class="truncate text-xs font-medium text-highlighted">Glas-Bestellung · 1. Tour · Packliste EG</p>
             <p class="mt-1 text-xs text-muted">Page 1 of 4 · {{ activeFieldLabel }}</p>
           </div>
-          <UButton class="shrink-0" color="neutral" variant="ghost" icon="i-lucide-rotate-ccw" label="Reset view" @click="resetPdfZoom" />
+          <UButton
+            class="shrink-0"
+            color="neutral"
+            variant="outline"
+            size="sm"
+            icon="i-lucide-rotate-ccw"
+            label="Reset to 100%"
+            :disabled="documentScale === defaultZoom / 100"
+            @click="resetPdfZoom"
+          />
         </div>
 
         <div class="relative min-h-0 flex-1 overflow-hidden">
@@ -77,19 +86,22 @@
                 </span>
               </div>
 
-              <button
-                v-for="field in overlayFields"
-                :key="field.id"
-                class="panzoom-exclude absolute z-10 grid size-5 place-items-center border transition-colors"
-                :class="field.id === activeField ? 'border-primary bg-primary text-inverted' : 'border-primary/70 bg-default text-primary hover:bg-primary/10'"
-                :style="markerStyle(field.position)"
-                type="button"
-                :aria-label="`Locate ${field.label}`"
-                @click="activeField = field.id"
-              >
-                <span class="text-[10px] leading-none font-medium">{{ field.index }}</span>
-              </button>
             </div>
+          </div>
+
+          <div class="pointer-events-none absolute inset-0 z-10">
+            <button
+              v-for="field in overlayFields"
+              :key="field.id"
+              class="panzoom-exclude pointer-events-auto absolute grid size-6 -translate-y-1/2 place-items-center border text-xs font-medium transition-colors"
+              :class="field.id === activeField ? 'border-primary bg-primary text-inverted' : 'border-primary/70 bg-default text-primary hover:bg-primary/10'"
+              :style="markerStyle(field)"
+              type="button"
+              :aria-label="`Locate ${field.label}`"
+              @click="activeField = field.id"
+            >
+              {{ field.index }}
+            </button>
           </div>
         </div>
       </article>
@@ -115,6 +127,7 @@ const documentScale = ref(defaultZoom / 100);
 const viewerElement = useTemplateRef<HTMLElement>("viewerElement");
 const panzoomTarget = useTemplateRef<HTMLElement>("panzoomTarget");
 let panzoom: PanzoomObject | undefined;
+let zoomWithWheel: PanzoomObject["zoomWithWheel"] | undefined;
 const horizontalFieldUi = {
   root: "grid grid-cols-[7rem_minmax(0,1fr)] items-start gap-3",
   labelWrapper: "pt-2 text-left",
@@ -162,6 +175,7 @@ const overlayFields = [
 
 const activeFieldLabel = computed(() => overlayFields.find(field => field.id === activeField.value)?.label ?? "Document field");
 const activeOverlay = computed(() => overlayFields.find(field => field.id === activeField.value));
+const markerPositions = ref<Record<string, { top: string; left: string }>>({});
 
 function fieldClass(fieldId: string) {
   return activeField.value === fieldId ? "-m-2 rounded-sm bg-primary/10 p-2" : "-m-2 p-2";
@@ -169,6 +183,7 @@ function fieldClass(fieldId: string) {
 
 function resetPdfZoom() {
   panzoom?.reset({ animate: false });
+  documentScale.value = defaultZoom / 100;
 }
 
 function boundingBoxStyle(bounds: Record<string, string>) {
@@ -178,12 +193,29 @@ function boundingBoxStyle(bounds: Record<string, string>) {
   };
 }
 
-function markerStyle(position: Record<string, string>) {
-  return {
-    ...position,
-    transform: `scale(${1 / documentScale.value})`,
-    transformOrigin: "top left",
-  };
+function markerStyle(field: typeof overlayFields[number]) {
+  return markerPositions.value[field.id] ?? field.position;
+}
+
+function updateMarkerPositions() {
+  const target = panzoomTarget.value;
+  const canvas = target?.parentElement;
+  const document = target?.firstElementChild;
+  if (!canvas || !document) return;
+
+  const canvasBounds = canvas.getBoundingClientRect();
+  const documentBounds = document.getBoundingClientRect();
+  const markerLeft = Math.max(0, documentBounds.left - canvasBounds.left);
+
+  markerPositions.value = Object.fromEntries(overlayFields.map((field) => {
+    const top = documentBounds.top - canvasBounds.top + (documentBounds.height * Number.parseFloat(field.position.top) / 100);
+    return [field.id, { top: `${top}px`, left: `${markerLeft}px` }];
+  }));
+}
+
+function handlePanzoomChange(event: Event) {
+  documentScale.value = (event as CustomEvent<{ scale: number }>).detail.scale;
+  nextTick(updateMarkerPositions);
 }
 
 const boundingBoxLabelStyle = computed(() => ({
@@ -205,13 +237,17 @@ onMounted(() => {
     panOnlyWhenZoomed: true,
     step: 0.25,
   });
-  viewer.addEventListener("wheel", panzoom.zoomWithWheel);
-  target.addEventListener("panzoomchange", (event) => {
-    documentScale.value = (event as CustomEvent<{ scale: number }>).detail.scale;
-  });
+  zoomWithWheel = panzoom.zoomWithWheel;
+  viewer.addEventListener("wheel", zoomWithWheel);
+  target.addEventListener("panzoomchange", handlePanzoomChange);
+  window.addEventListener("resize", updateMarkerPositions);
+  nextTick(updateMarkerPositions);
 });
 
 onBeforeUnmount(() => {
+  if (zoomWithWheel) viewerElement.value?.removeEventListener("wheel", zoomWithWheel);
+  panzoomTarget.value?.removeEventListener("panzoomchange", handlePanzoomChange);
+  window.removeEventListener("resize", updateMarkerPositions);
   panzoom?.destroy();
 });
 </script>
