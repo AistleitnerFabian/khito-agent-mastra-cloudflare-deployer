@@ -62,7 +62,6 @@
             size="sm"
             icon="i-lucide-rotate-ccw"
             label="Reset to 100%"
-            :disabled="documentScale === defaultZoom / 100"
             @click="resetPdfZoom"
           />
         </div>
