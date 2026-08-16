@@ -1,4 +1,5 @@
-import { createInboxItem } from "../../repositories/inbox-items";
+import { createInboxItem, deleteInboxItem } from "@khito/shared/inbox-database";
+import type { InboxProcessingMessage } from "@khito/shared/inbox";
 
 const maximumFileSize = 25 * 1024 * 1024;
 
@@ -40,13 +41,16 @@ export default defineEventHandler(async (event) => {
     name: file.name,
     contentType,
     size: file.size,
+    processingStatus: "pending" as const,
     receivedAt: storedFile.uploaded.toISOString(),
   };
 
   try {
     await createInboxItem(useDatabase(event), inboxItem);
+    await event.context.cloudflare.env.INBOX_PROCESSING.send({ inboxItemId: inboxItem.id } satisfies InboxProcessingMessage);
   }
   catch (error) {
+    await deleteInboxItem(useDatabase(event), inboxItem.id);
     await bucket.delete(storedFile.key);
     throw error;
   }

@@ -17,3 +17,5 @@ patchedDependencies:
 packages:
   - mastra
   - web
+  - docling-worker
+  - shared

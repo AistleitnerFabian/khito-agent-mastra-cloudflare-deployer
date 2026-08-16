@@ -1,0 +1,6 @@
+FROM quay.io/docling-project/docling-serve:v1.21.0
+
+ENV DOCLING_DEVICE=cpu
+ENV DOCLING_SERVE_ENG_LOC_NUM_WORKERS=1
+
+EXPOSE 5001

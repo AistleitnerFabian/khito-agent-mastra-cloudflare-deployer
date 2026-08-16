@@ -25,5 +25,13 @@
       "database_id": "b54926ee-7e27-4685-88fd-52cdd1474a42",
       "migrations_dir": "migrations"
     }
-  ]
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "INBOX_PROCESSING",
+        "queue": "khito-inbox-processing"
+      }
+    ]
+  }
 }

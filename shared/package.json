@@ -1,0 +1,13 @@
+{
+  "name": "@khito/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./inbox": "./src/inbox.ts",
+    "./inbox-database": "./src/inbox-database.ts"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.2"
+  }
+}

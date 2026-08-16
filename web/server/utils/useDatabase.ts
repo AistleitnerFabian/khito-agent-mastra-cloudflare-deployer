@@ -1,4 +1,4 @@
-import { createDatabase } from "./database";
+import { createInboxDatabase } from "@khito/shared/inbox-database";
 
 type CloudflareEvent = {
   context: unknown;
@@ -16,5 +16,5 @@ export function useDatabase(event: CloudflareEvent) {
     throw createError({ statusCode: 503, statusMessage: "Database is not configured." });
   }
 
-  return createDatabase(database);
+  return createInboxDatabase(database);
 }

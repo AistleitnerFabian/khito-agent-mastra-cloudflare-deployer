@@ -1,26 +1,22 @@
+import { createInboxFileKey as createSharedInboxFileKey } from "@khito/shared/inbox";
+
 export type InboxFile = {
   id: string;
   name: string;
   contentType: string;
   size: number;
+  processingStatus: "pending" | "processing" | "completed" | "failed";
   uploadedAt: string;
 };
 
-export function createInboxFileKey(name: string) {
-  const safeName = name
-    .normalize("NFKD")
-    .replace(/[^a-zA-Z0-9._-]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 120) || "upload";
-
-  return `inbox/${crypto.randomUUID()}-${safeName}`;
-}
+export const createInboxFileKey = createSharedInboxFileKey;
 
 export function toInboxFile(item: {
   id: string;
   name: string;
   contentType: string;
   size: number;
+  processingStatus: "pending" | "processing" | "completed" | "failed";
   receivedAt: string;
 }): InboxFile {
   return {
@@ -28,6 +24,7 @@ export function toInboxFile(item: {
     name: item.name,
     contentType: item.contentType,
     size: item.size,
+    processingStatus: item.processingStatus,
     uploadedAt: item.receivedAt,
   };
 }
