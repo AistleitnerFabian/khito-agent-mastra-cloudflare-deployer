@@ -88,6 +88,11 @@
     />
 
     <div class="mt-auto border-t border-default p-2">
+      <div class="mb-2 flex justify-center">
+        <ClientOnly>
+          <UserButton after-sign-out-url="/sign-in" />
+        </ClientOnly>
+      </div>
       <UButton
         v-if="!open"
         :icon="isDark ? 'i-lucide-moon' : 'i-lucide-sun'"

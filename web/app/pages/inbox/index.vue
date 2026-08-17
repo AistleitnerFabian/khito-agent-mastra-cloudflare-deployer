@@ -172,6 +172,7 @@ const doclingOutputError = ref("");
 const doclingOutputLoading = ref(false);
 const doclingOutputStatus = ref("");
 const teamMemberOptions = ["Unassigned", "Fabian Aistleitner", "Lena Hoffmann", "Max Berger"];
+const clerkFetch = useClerkFetch();
 
 const doclingOutputText = computed(() => {
   if (!doclingOutput.value) return "";
@@ -218,7 +219,7 @@ function formatFileSize(size: number) {
 
 async function loadInboxFiles() {
   try {
-    const files = await $fetch<StoredInboxFile[]>("/api/inbox/files");
+    const files = await clerkFetch<StoredInboxFile[]>("/api/inbox/files");
     forwardedEmails.value = files.map(inboxEntryFromFile);
 
     if (!selectedEmail.value) {
@@ -257,7 +258,7 @@ async function uploadFile(file: File): Promise<StoredInboxFile> {
   const formData = new FormData();
   formData.set("file", file);
 
-  return $fetch<StoredInboxFile>("/api/inbox/files", { method: "POST", body: formData });
+  return clerkFetch<StoredInboxFile>("/api/inbox/files", { method: "POST", body: formData });
 }
 
 async function loadDoclingOutput() {
@@ -269,7 +270,7 @@ async function loadDoclingOutput() {
   doclingOutputStatus.value = "";
 
   try {
-    const response = await $fetch<DoclingOutput | { processingError: string | null; processingStatus: string }>(`/api/inbox/files/${email.id}/docling`);
+    const response = await clerkFetch<DoclingOutput | { processingError: string | null; processingStatus: string }>(`/api/inbox/files/${email.id}/docling`);
 
     if ("document" in response) {
       doclingOutput.value = response;

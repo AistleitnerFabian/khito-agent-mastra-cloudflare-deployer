@@ -16,7 +16,10 @@ export default defineNuxtConfig({
       ],
     },
   },
-  modules: ["@nuxt/eslint", "@nuxt/ui", "@vueuse/nuxt"],
+  modules: ["@nuxt/eslint", "@nuxt/ui", "@vueuse/nuxt", "@clerk/nuxt"],
+  clerk: {
+    skipServerMiddleware: true,
+  },
   ui: {
     colorMode: false,
   },

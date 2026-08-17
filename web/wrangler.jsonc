@@ -6,6 +6,9 @@
     "directory": ".output/public"
   },
   "compatibility_date": "2026-08-14",
+  "vars": {
+    "NUXT_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_bm9ibGUtaHVza3ktMC5jbGVyay5hY2NvdW50cy5kZXYk"
+  },
   "services": [
     {
       "binding": "KHITO_AGENT",
