@@ -71,15 +71,27 @@
             <p class="text-xs font-medium text-dimmed">Forwarded by {{ selectedEmail.forwardedBy }}</p>
             <h2 class="mt-1 text-xl font-semibold text-highlighted">{{ selectedEmail.subject }}</h2>
           </div>
-          <UButton
-            color="neutral"
-            variant="ghost"
-            icon="i-lucide-info"
-            size="sm"
-            aria-label="Show Docling output"
-            :aria-pressed="doclingOutputOpen"
-            @click="toggleDoclingOutput"
-          />
+          <div class="flex shrink-0 items-center gap-1">
+            <UButton
+              v-if="selectedEmail.processingStatus === 'failed'"
+              size="sm"
+              color="neutral"
+              variant="outline"
+              icon="i-lucide-rotate-cw"
+              label="Retry Docling"
+              :loading="retryingDocling"
+              @click="retryDocling"
+            />
+            <UButton
+              color="neutral"
+              variant="ghost"
+              icon="i-lucide-info"
+              size="sm"
+              aria-label="Show Docling output"
+              :aria-pressed="doclingOutputOpen"
+              @click="toggleDoclingOutput"
+            />
+          </div>
         </div>
         <div class="mt-4 flex items-center gap-3 text-xs text-muted">
           <span>{{ selectedEmail.sender }}</span>
@@ -99,7 +111,20 @@
           </p>
           <pre class="mt-3 max-h-72 overflow-auto rounded-md bg-default p-3 text-xs leading-5 whitespace-pre-wrap text-default">{{ doclingOutputText }}</pre>
         </template>
-        <p v-else class="mt-2 text-sm text-muted">{{ doclingOutputStatus || "Docling has not produced an extraction for this item yet." }}</p>
+        <template v-else>
+          <p class="mt-2 text-sm text-muted">{{ doclingOutputStatus || "Docling has not produced an extraction for this item yet." }}</p>
+          <UButton
+            v-if="selectedEmail?.processingStatus === 'failed'"
+            class="mt-3"
+            size="xs"
+            color="neutral"
+            variant="outline"
+            icon="i-lucide-rotate-cw"
+            label="Retry Docling"
+            :loading="retryingDocling"
+            @click="retryDocling"
+          />
+        </template>
       </section>
 
       <div class="flex min-h-0 flex-1 flex-col xl:flex-row">
@@ -171,6 +196,7 @@ const doclingOutput = ref<DoclingOutput | null>(null);
 const doclingOutputError = ref("");
 const doclingOutputLoading = ref(false);
 const doclingOutputStatus = ref("");
+const retryingDocling = ref(false);
 const teamMemberOptions = ["Unassigned", "Fabian Aistleitner", "Lena Hoffmann", "Max Berger"];
 const clerkFetch = useClerkFetch();
 
@@ -228,6 +254,14 @@ async function loadInboxFiles() {
   }
   catch {
     return;
+  }
+}
+
+async function refreshActiveDoclingJobs() {
+  await loadInboxFiles();
+
+  if (doclingOutputOpen.value && selectedEmail.value?.storedInboxItem) {
+    await loadDoclingOutput();
   }
 }
 
@@ -290,6 +324,26 @@ async function loadDoclingOutput() {
   }
 }
 
+async function retryDocling() {
+  const email = selectedEmail.value;
+  if (!email?.storedInboxItem || email.processingStatus !== "failed") return;
+
+  retryingDocling.value = true;
+  doclingOutputError.value = "";
+
+  try {
+    await clerkFetch(`/api/inbox/files/${email.id}/retry`, { method: "POST" });
+    email.processingStatus = "pending";
+    doclingOutputStatus.value = "Docling is pending.";
+  }
+  catch (error) {
+    doclingOutputError.value = error instanceof Error ? error.message : "The Docling retry could not be started.";
+  }
+  finally {
+    retryingDocling.value = false;
+  }
+}
+
 function toggleDoclingOutput() {
   doclingOutputOpen.value = !doclingOutputOpen.value;
 
@@ -311,7 +365,7 @@ onMounted(() => {
   void loadInboxFiles();
   inboxRefreshTimer = window.setInterval(() => {
     if (hasActiveDoclingJobs.value) {
-      void loadInboxFiles();
+      void refreshActiveDoclingJobs();
     }
   }, 5_000);
 });

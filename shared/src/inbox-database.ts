@@ -78,6 +78,18 @@ export async function failInboxItemProcessing(database: InboxDatabase, id: strin
   }).where(eq(inboxItems.id, id)).run();
 }
 
+export async function retryInboxItemProcessing(database: InboxDatabase, id: string) {
+  const updatedAt = new Date().toISOString();
+
+  await database.update(inboxItems).set({
+    processingStatus: "pending",
+    processingError: null,
+    extractionKey: null,
+    processedAt: null,
+    updatedAt,
+  }).where(eq(inboxItems.id, id)).run();
+}
+
 export async function deleteInboxItem(database: InboxDatabase, id: string) {
   await database.delete(inboxItems).where(eq(inboxItems.id, id)).run();
 }

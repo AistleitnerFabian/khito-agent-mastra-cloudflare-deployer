@@ -14,6 +14,6 @@ export function useClerkFetch() {
       headers.set("Authorization", `Bearer ${token}`);
     }
 
-    return $fetch<T>(request, { ...options, headers });
+    return $fetch(request, { ...options, headers }) as Promise<T>;
   };
 }

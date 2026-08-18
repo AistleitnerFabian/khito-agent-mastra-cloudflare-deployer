@@ -1,11 +1,14 @@
 {
   "$schema": "../node_modules/wrangler/config-schema.json",
   "name": "khito-web",
-  "main": ".output/server/index.mjs",
+  "main": "worker/index.ts",
   "assets": {
     "directory": ".output/public"
   },
   "compatibility_date": "2026-08-14",
+  "observability": {
+    "enabled": true
+  },
   "vars": {
     "NUXT_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_bm9ibGUtaHVza3ktMC5jbGVyay5hY2NvdW50cy5kZXYk"
   },
@@ -35,6 +38,38 @@
         "binding": "INBOX_PROCESSING",
         "queue": "khito-inbox-processing"
       }
+    ],
+    "consumers": [
+      {
+        "queue": "khito-inbox-processing",
+        "max_batch_size": 1,
+        "max_batch_timeout": 1,
+        "max_retries": 3
+      }
     ]
-  }
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "DOCLING_CONTAINER",
+        "class_name": "DoclingContainer"
+      }
+    ]
+  },
+  "containers": [
+    {
+      "class_name": "DoclingContainer",
+      "image": "./worker/containers/docling/Dockerfile",
+      "max_instances": 3,
+      "instance_type": "standard-2"
+    }
+  ],
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "DoclingContainer"
+      ]
+    }
+  ]
 }

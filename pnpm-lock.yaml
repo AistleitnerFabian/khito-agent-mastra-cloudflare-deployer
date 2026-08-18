@@ -11,22 +11,6 @@ importers:
 
   .: {}
 
-  docling-worker:
-    dependencies:
-      '@cloudflare/containers':
-        specifier: ^0.3.7
-        version: 0.3.7
-      '@khito/shared':
-        specifier: workspace:*
-        version: link:../shared
-    devDependencies:
-      typescript:
-        specifier: 6.0.3
-        version: 6.0.3
-      wrangler:
-        specifier: ^4.123.0
-        version: 4.123.0
-
   mastra:
     dependencies:
       '@mastra/core':
@@ -66,6 +50,9 @@ importers:
       '@clerk/nuxt':
         specifier: 2.6.12
         version: 2.6.12(magic-string@1.2.0)(magicast@0.5.4)(rolldown@1.2.4)(unplugin@3.3.0(esbuild@0.28.2)(rolldown@1.2.4)(rollup@4.62.4)(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.12)(yaml@2.9.0)))(vue@3.5.41(typescript@6.0.3))
+      '@cloudflare/containers':
+        specifier: ^0.3.7
+        version: 0.3.7
       '@codemirror/lang-json':
         specifier: ^6.0.2
         version: 6.0.2

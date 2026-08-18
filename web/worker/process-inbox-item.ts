@@ -7,7 +7,7 @@ import {
   findInboxItem,
   markInboxItemProcessing,
 } from "@khito/shared/inbox-database";
-import type { DoclingContainer, DoclingExtraction } from "./docling-container";
+import type { DoclingExtraction } from "./docling-container";
 
 type ProcessingEnvironment = Pick<Cloudflare.Env, "DATABASE" | "DOCLING_CONTAINER" | "INBOX_FILES">;
 
@@ -35,7 +35,16 @@ export async function processInboxItem(message: InboxProcessingMessage, environm
 
   try {
     const container = getContainer(environment.DOCLING_CONTAINER, item.id);
-    const extraction = await container.extract(item.sourceKey);
+    const source = await environment.INBOX_FILES.get(item.sourceKey);
+    if (!source) {
+      throw new Error("The inbox source file could not be found.");
+    }
+
+    const extraction = await container.extract({
+      bytes: await source.arrayBuffer(),
+      contentType: item.contentType,
+      name: item.name,
+    });
     const extractionKey = createInboxExtractionKey(item.id);
 
     await environment.INBOX_FILES.put(extractionKey, toExtractionArtifact(extraction), {
