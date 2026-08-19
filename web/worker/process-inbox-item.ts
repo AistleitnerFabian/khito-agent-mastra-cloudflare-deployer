@@ -1,4 +1,3 @@
-import { getContainer } from "@cloudflare/containers";
 import { createInboxExtractionKey, type InboxProcessingMessage } from "@khito/shared/inbox";
 import {
   completeInboxItemProcessing,
@@ -7,9 +6,9 @@ import {
   findInboxItem,
   markInboxItemProcessing,
 } from "@khito/shared/inbox-database";
-import type { DoclingExtraction } from "./docling-container";
+import { extractWithDocling, type DoclingExtraction } from "./docling-client";
 
-type ProcessingEnvironment = Pick<Cloudflare.Env, "DATABASE" | "DOCLING_CONTAINER" | "INBOX_FILES">;
+type ProcessingEnvironment = Pick<Cloudflare.Env, "DATABASE" | "DOCLING_PROCESSOR" | "INBOX_FILES">;
 
 function toExtractionArtifact(extraction: DoclingExtraction) {
   return JSON.stringify({
@@ -34,17 +33,16 @@ export async function processInboxItem(message: InboxProcessingMessage, environm
   await markInboxItemProcessing(database, item.id);
 
   try {
-    const container = getContainer(environment.DOCLING_CONTAINER, item.id);
     const source = await environment.INBOX_FILES.get(item.sourceKey);
     if (!source) {
       throw new Error("The inbox source file could not be found.");
     }
 
-    const extraction = await container.extract({
+    const extraction = await extractWithDocling({
       bytes: await source.arrayBuffer(),
       contentType: item.contentType,
       name: item.name,
-    });
+    }, environment.DOCLING_PROCESSOR);
     const extractionKey = createInboxExtractionKey(item.id);
 
     await environment.INBOX_FILES.put(extractionKey, toExtractionArtifact(extraction), {

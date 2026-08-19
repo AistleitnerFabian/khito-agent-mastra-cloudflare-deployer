@@ -18,6 +18,13 @@
       "service": "khito-agent"
     }
   ],
+  "vpc_services": [
+    {
+      "binding": "DOCLING_PROCESSOR",
+      "service_id": "01a01b30-ef4d-75a2-b5da-dda8edf5756a",
+      "remote": true
+    }
+  ],
   "r2_buckets": [
     {
       "binding": "INBOX_FILES",
@@ -44,6 +51,7 @@
         "queue": "khito-inbox-processing",
         "max_batch_size": 1,
         "max_batch_timeout": 1,
+        "max_concurrency": 1,
         "max_retries": 3
       }
     ]
@@ -60,7 +68,7 @@
     {
       "class_name": "DoclingContainer",
       "image": "./worker/containers/docling/Dockerfile",
-      "max_instances": 3,
+      "max_instances": 1,
       "instance_type": "standard-2"
     }
   ],

@@ -29,7 +29,7 @@ export type DoclingSource = {
 
 export class DoclingContainer extends Container {
   override defaultPort = doclingPort;
-  override sleepAfter = "30s";
+  override sleepAfter = "5m";
   override enableInternet = false;
   override pingEndpoint = "localhost/ready";
 
