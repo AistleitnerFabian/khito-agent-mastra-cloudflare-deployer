@@ -50,9 +50,6 @@ importers:
       '@clerk/nuxt':
         specifier: 2.6.12
         version: 2.6.12(magic-string@1.2.0)(magicast@0.5.4)(rolldown@1.2.4)(unplugin@3.3.0(esbuild@0.28.2)(rolldown@1.2.4)(rollup@4.62.4)(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.12)(yaml@2.9.0)))(vue@3.5.41(typescript@6.0.3))
-      '@cloudflare/containers':
-        specifier: ^0.3.7
-        version: 0.3.7
       '@codemirror/lang-json':
         specifier: ^6.0.2
         version: 6.0.2
@@ -487,9 +484,6 @@ packages:
     engines: {node: '>=20.9.0'}
     peerDependencies:
       vue: ^3.2.0
-
-  '@cloudflare/containers@0.3.7':
-    resolution: {integrity: sha512-DM9dm3FnIBSyiSJ1FLavKwl/lk3oAmTaynCzZQ9pZR0ncRPquSxkxd8Nu2MFILxmDDsPkxKsSNEh9mHHMty4Fw==}
 
   '@cloudflare/kv-asset-handler@0.4.2':
     resolution: {integrity: sha512-SIOD2DxrRRwQ+jgzlXCqoEFiKOFqaPjhnNTGKXSRLvp1HiOvapLaFG2kEr9dYQTYe8rKrd9uvDUzmAITeNyaHQ==}
@@ -7832,8 +7826,6 @@ snapshots:
     transitivePeerDependencies:
       - react
       - react-dom
-
-  '@cloudflare/containers@0.3.7': {}
 
   '@cloudflare/kv-asset-handler@0.4.2': {}
 

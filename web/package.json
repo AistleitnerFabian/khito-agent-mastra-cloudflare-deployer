@@ -14,7 +14,6 @@
   },
   "dependencies": {
     "@clerk/nuxt": "2.6.12",
-    "@cloudflare/containers": "^0.3.7",
     "@codemirror/lang-json": "^6.0.2",
     "@codemirror/state": "^6.7.1",
     "@codemirror/view": "^6.43.8",

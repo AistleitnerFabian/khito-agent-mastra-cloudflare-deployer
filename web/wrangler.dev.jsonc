@@ -1,3 +1,7 @@
+// Local development config for the cloudflare-dev bindings proxy used by `nuxt dev`.
+// Keep in sync with wrangler.jsonc, but without `vpc_services` and `migrations`:
+// wrangler treats VPC service bindings as remote-only with no local simulator,
+// which hangs the bindings proxy and leaves D1, R2, and queue bindings unavailable.
 {
   "$schema": "../node_modules/wrangler/config-schema.json",
   "name": "khito-web",
@@ -16,13 +20,6 @@
     {
       "binding": "KHITO_AGENT",
       "service": "khito-agent"
-    }
-  ],
-  "vpc_services": [
-    {
-      "binding": "DOCLING_PROCESSOR",
-      "service_id": "01a01b30-ef4d-75a2-b5da-dda8edf5756a",
-      "remote": true
     }
   ],
   "r2_buckets": [
@@ -55,19 +52,5 @@
         "max_retries": 3
       }
     ]
-  },
-  "migrations": [
-    {
-      "tag": "v1",
-      "new_sqlite_classes": [
-        "DoclingContainer"
-      ]
-    },
-    {
-      "tag": "v2",
-      "deleted_classes": [
-        "DoclingContainer"
-      ]
-    }
-  ]
+  }
 }

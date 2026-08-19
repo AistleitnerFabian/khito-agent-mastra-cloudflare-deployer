@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url";
+
 export default defineNuxtConfig({
   app: {
     head: {
@@ -26,5 +28,10 @@ export default defineNuxtConfig({
   css: ["~/assets/css/main.css"],
   nitro: {
     preset: "cloudflare_module",
+    cloudflare: {
+      dev: {
+        configPath: fileURLToPath(new URL("./wrangler.dev.jsonc", import.meta.url)),
+      },
+    },
   },
 });
