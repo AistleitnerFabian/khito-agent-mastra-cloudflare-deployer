@@ -53,7 +53,15 @@
             </div>
             <p class="mt-1 truncate text-sm text-default">{{ email.subject }}</p>
             <p class="mt-1 line-clamp-2 text-xs leading-5 text-muted">{{ email.preview }}</p>
-            <UBadge class="mt-3" color="neutral" variant="subtle" size="xs">{{ email.sourceType }}</UBadge>
+            <div class="mt-3 flex items-center gap-1.5">
+              <UBadge color="neutral" variant="subtle" size="xs">{{ email.sourceType }}</UBadge>
+              <UBadge
+                v-if="email.documentType"
+                :color="documentTypeBadges[email.documentType].color"
+                variant="subtle"
+                size="xs"
+              >{{ documentTypeBadges[email.documentType].label }}</UBadge>
+            </div>
             <p v-if="email.status !== 'Needs triage'" class="mt-3 text-xs text-dimmed">{{ email.status }}</p>
           </button>
           <div class="flex items-center gap-1 px-5 pt-2 pb-3 text-xs text-dimmed">
@@ -134,7 +142,16 @@
 
         <aside class="border-t border-default p-6 xl:w-80 xl:border-t-0 xl:border-l">
           <div class="space-y-2">
-            <UButton block icon="i-lucide-file-plus-2" label="Extract document" @click="extractDocument" />
+            <UButton
+              v-if="isExtractableDocumentType(selectedEmail.documentType)"
+              block
+              icon="i-lucide-file-plus-2"
+              label="Extract document"
+              @click="extractDocument"
+            />
+            <p v-else-if="selectedEmail.processingStatus === 'completed'" class="text-xs leading-5 text-muted">
+              Not an order, quotation, or invoice — nothing to extract.
+            </p>
             <UButton block color="neutral" variant="outline" label="Ignore" @click="ignoreEmail" />
           </div>
 
@@ -152,6 +169,8 @@
 </template>
 
 <script setup lang="ts">
+import { isExtractableDocumentType, type DocumentType } from "@khito/shared/inbox";
+
 type ForwardedEmail = {
   id: string;
   sender: string;
@@ -163,6 +182,7 @@ type ForwardedEmail = {
   body: string;
   assignee: string;
   status: "Needs triage" | "Ready to create" | "Not a document";
+  documentType: DocumentType | null;
   processingStatus: StoredInboxFile["processingStatus"];
   storedInboxItem: boolean;
 };
@@ -172,6 +192,7 @@ type StoredInboxFile = {
   name: string;
   contentType: string;
   size: number;
+  documentType: DocumentType | null;
   processingStatus: "pending" | "processing" | "completed" | "failed";
   uploadedAt: string;
 };
@@ -198,6 +219,12 @@ const doclingOutputLoading = ref(false);
 const doclingOutputStatus = ref("");
 const retryingDocling = ref(false);
 const teamMemberOptions = ["Unassigned", "Fabian Aistleitner", "Lena Hoffmann", "Max Berger"];
+const documentTypeBadges: Record<DocumentType, { label: string; color: "primary" | "secondary" | "info" | "neutral" }> = {
+  order: { label: "Order", color: "primary" },
+  quotation: { label: "Quotation", color: "secondary" },
+  invoice: { label: "Invoice", color: "info" },
+  other: { label: "Other", color: "neutral" },
+};
 const clerkFetch = useClerkFetch();
 
 const doclingOutputText = computed(() => {
@@ -229,6 +256,7 @@ function inboxEntryFromFile(file: StoredInboxFile): ForwardedEmail {
     body: `File uploaded to the Inbox.\n\n${file.name}`,
     assignee: "Unassigned",
     status: "Needs triage",
+    documentType: file.documentType,
     storedInboxItem: true,
     processingStatus: file.processingStatus,
   };

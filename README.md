@@ -7,6 +7,18 @@ This repository contains two pnpm workspaces:
 
 Run `pnpm dev:mastra` or `pnpm dev:web` for local development. Build all workspaces with `pnpm build`.
 
+## Local Docling service
+
+Start the local Docling container before `pnpm dev`:
+
+```sh
+pnpm dev:docling
+```
+
+This runs the same CPU-based Docling image as the VPS (`quay.io/docling-project/docling-serve-cpu`) on http://localhost:5001 and keeps the model cache in a named volume. Stop it with `pnpm dev:docling:down`.
+
+In local development, inbox items bypass the Cloudflare Queue and are processed directly against this container and the local Mastra dev server (http://localhost:4111). Classification additionally needs `mastra/.env` with `OPENROUTER_API_KEY` (see `mastra/.env.example`).
+
 ## VPS access
 
 Connect to the Hetzner VPS through Cloudflare Access:

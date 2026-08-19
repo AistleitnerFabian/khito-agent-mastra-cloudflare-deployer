@@ -1,6 +1,7 @@
 import { desc, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { documentTypes, type DocumentType } from "./inbox";
 
 export const inboxItems = sqliteTable("inbox_items", {
   id: text("id").primaryKey(),
@@ -16,6 +17,7 @@ export const inboxItems = sqliteTable("inbox_items", {
   processingStatus: text("processing_status", { enum: ["pending", "processing", "completed", "failed"] }).notNull().default("pending"),
   processingError: text("processing_error"),
   extractionKey: text("extraction_key"),
+  documentType: text("document_type", { enum: documentTypes }),
   processedAt: text("processed_at"),
   documentId: text("document_id"),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
@@ -57,12 +59,13 @@ export async function markInboxItemProcessing(database: InboxDatabase, id: strin
   }).where(eq(inboxItems.id, id)).run();
 }
 
-export async function completeInboxItemProcessing(database: InboxDatabase, id: string, extractionKey: string) {
+export async function completeInboxItemProcessing(database: InboxDatabase, id: string, extractionKey: string, documentType: DocumentType) {
   const processedAt = new Date().toISOString();
 
   await database.update(inboxItems).set({
     processingStatus: "completed",
     extractionKey,
+    documentType,
     processedAt,
     updatedAt: processedAt,
   }).where(eq(inboxItems.id, id)).run();
@@ -85,6 +88,7 @@ export async function retryInboxItemProcessing(database: InboxDatabase, id: stri
     processingStatus: "pending",
     processingError: null,
     extractionKey: null,
+    documentType: null,
     processedAt: null,
     updatedAt,
   }).where(eq(inboxItems.id, id)).run();

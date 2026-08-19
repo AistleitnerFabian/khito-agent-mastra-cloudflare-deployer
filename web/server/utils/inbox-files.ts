@@ -1,10 +1,11 @@
-import { createInboxFileKey as createSharedInboxFileKey } from "@khito/shared/inbox";
+import { createInboxFileKey as createSharedInboxFileKey, type DocumentType } from "@khito/shared/inbox";
 
 export type InboxFile = {
   id: string;
   name: string;
   contentType: string;
   size: number;
+  documentType: DocumentType | null;
   processingStatus: "pending" | "processing" | "completed" | "failed";
   uploadedAt: string;
 };
@@ -16,6 +17,7 @@ export function toInboxFile(item: {
   name: string;
   contentType: string;
   size: number;
+  documentType: DocumentType | null;
   processingStatus: "pending" | "processing" | "completed" | "failed";
   receivedAt: string;
 }): InboxFile {
@@ -24,6 +26,7 @@ export function toInboxFile(item: {
     name: item.name,
     contentType: item.contentType,
     size: item.size,
+    documentType: item.documentType,
     processingStatus: item.processingStatus,
     uploadedAt: item.receivedAt,
   };

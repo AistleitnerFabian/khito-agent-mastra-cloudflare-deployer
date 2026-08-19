@@ -1,4 +1,3 @@
-import type { InboxProcessingMessage } from "@khito/shared/inbox";
 import { findInboxItem, retryInboxItemProcessing } from "@khito/shared/inbox-database";
 
 export default defineEventHandler(async (event) => {
@@ -19,7 +18,7 @@ export default defineEventHandler(async (event) => {
   }
 
   await retryInboxItemProcessing(database, id);
-  await event.context.cloudflare.env.INBOX_PROCESSING.send({ inboxItemId: id } satisfies InboxProcessingMessage);
+  await dispatchInboxProcessing(event.context.cloudflare.env, id);
 
   return { processingStatus: "pending" as const };
 });

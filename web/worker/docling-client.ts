@@ -22,13 +22,17 @@ export type DoclingSource = {
   name: string;
 };
 
-export async function extractWithDocling(source: DoclingSource, processor: Fetcher): Promise<DoclingExtraction> {
+export type ServiceFetcher = {
+  fetch(input: string, init?: RequestInit): Promise<Response>;
+};
+
+export async function extractWithDocling(source: DoclingSource, processor: ServiceFetcher, origin: string): Promise<DoclingExtraction> {
   const formData = new FormData();
   formData.append("files", new File([source.bytes], source.name, { type: source.contentType }));
   formData.append("to_formats", "md");
   formData.append("to_formats", "json");
 
-  const response = await processor.fetch("http://docling.internal/v1/convert/file", {
+  const response = await processor.fetch(`${origin}/v1/convert/file`, {
     method: "POST",
     body: formData,
   });

@@ -1,0 +1,14 @@
+services:
+  docling:
+    image: quay.io/docling-project/docling-serve-cpu:latest
+    ports:
+      - "5001:5001"
+    environment:
+      OMP_NUM_THREADS: "3"
+      DOCLING_SERVE_MAX_SYNC_WAIT: "600"
+    mem_limit: 6g
+    volumes:
+      - docling-models:/root/.cache
+
+volumes:
+  docling-models:

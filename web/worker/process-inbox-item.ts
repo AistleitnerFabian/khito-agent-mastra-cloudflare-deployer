@@ -1,14 +1,20 @@
-import { createInboxExtractionKey, type InboxProcessingMessage } from "@khito/shared/inbox";
+import { createInboxExtractionKey, type DocumentType, type InboxProcessingMessage } from "@khito/shared/inbox";
 import {
   completeInboxItemProcessing,
-  createInboxDatabase,
   failInboxItemProcessing,
   findInboxItem,
+  type InboxDatabase,
   markInboxItemProcessing,
 } from "@khito/shared/inbox-database";
-import { extractWithDocling, type DoclingExtraction } from "./docling-client";
+import type { ClassificationSource } from "./document-classifier";
+import type { DoclingExtraction, DoclingSource } from "./docling-client";
 
-type ProcessingEnvironment = Pick<Cloudflare.Env, "DATABASE" | "DOCLING_PROCESSOR" | "INBOX_FILES">;
+export type InboxProcessingServices = {
+  database: InboxDatabase;
+  inboxFiles: R2Bucket;
+  convertDocument: (source: DoclingSource) => Promise<DoclingExtraction>;
+  classifyDocument: (source: ClassificationSource) => Promise<DocumentType>;
+};
 
 function toExtractionArtifact(extraction: DoclingExtraction) {
   return JSON.stringify({
@@ -19,39 +25,43 @@ function toExtractionArtifact(extraction: DoclingExtraction) {
 }
 
 function toErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "Docling extraction failed.";
+  return error instanceof Error ? error.message : "The inbox item could not be processed.";
 }
 
-export async function processInboxItem(message: InboxProcessingMessage, environment: ProcessingEnvironment) {
-  const database = createInboxDatabase(environment.DATABASE);
-  const item = await findInboxItem(database, message.inboxItemId);
+export async function processInboxItem(message: InboxProcessingMessage, services: InboxProcessingServices) {
+  const item = await findInboxItem(services.database, message.inboxItemId);
 
   if (!item || item.processingStatus === "completed") {
     return;
   }
 
-  await markInboxItemProcessing(database, item.id);
+  await markInboxItemProcessing(services.database, item.id);
 
   try {
-    const source = await environment.INBOX_FILES.get(item.sourceKey);
+    const source = await services.inboxFiles.get(item.sourceKey);
     if (!source) {
       throw new Error("The inbox source file could not be found.");
     }
 
-    const extraction = await extractWithDocling({
+    const extraction = await services.convertDocument({
       bytes: await source.arrayBuffer(),
       contentType: item.contentType,
       name: item.name,
-    }, environment.DOCLING_PROCESSOR);
+    });
     const extractionKey = createInboxExtractionKey(item.id);
 
-    await environment.INBOX_FILES.put(extractionKey, toExtractionArtifact(extraction), {
+    await services.inboxFiles.put(extractionKey, toExtractionArtifact(extraction), {
       httpMetadata: { contentType: "application/json" },
     });
-    await completeInboxItemProcessing(database, item.id, extractionKey);
+
+    const documentType = await services.classifyDocument({
+      markdown: extraction.markdown || JSON.stringify(extraction.document),
+      name: item.name,
+    });
+    await completeInboxItemProcessing(services.database, item.id, extractionKey, documentType);
   }
   catch (error) {
-    await failInboxItemProcessing(database, item.id, toErrorMessage(error));
+    await failInboxItemProcessing(services.database, item.id, toErrorMessage(error));
     throw error;
   }
 }

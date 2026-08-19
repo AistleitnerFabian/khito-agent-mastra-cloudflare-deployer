@@ -4,7 +4,8 @@
   "packageManager": "pnpm@11.4.0",
   "scripts": {
     "dev": "pnpm --filter @khito/mastra --filter @khito/web --parallel --stream dev",
-    "dev:docling": "pnpm --filter @khito/docling-worker dev",
+    "dev:docling": "docker compose up -d docling",
+    "dev:docling:down": "docker compose stop docling",
     "dev:mastra": "pnpm --filter @khito/mastra dev",
     "dev:web": "pnpm --filter @khito/web dev",
     "build": "pnpm -r build",
