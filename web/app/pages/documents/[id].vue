@@ -24,8 +24,12 @@
     </div>
   </div>
 
-  <div v-else-if="document" class="flex min-h-screen bg-default">
-    <aside class="w-full max-w-sm shrink-0 overflow-y-auto border-r border-default px-5 py-6 sm:px-6">
+  <div v-else-if="document" class="flex min-h-screen bg-default" :class="resizingSidebar ? 'cursor-col-resize select-none' : ''">
+    <aside
+      class="w-full shrink-0 overflow-y-auto border-r border-default px-5 py-6 sm:px-6"
+      :class="resizingSidebar ? '' : 'transition-[max-width] duration-200 ease-out'"
+      :style="{ maxWidth: sidebarExpanded ? sidebarExpandedWidth : `${sidebarWidth}px` }"
+    >
       <UButton
         class="mb-4"
         color="neutral"
@@ -65,7 +69,32 @@
       </div>
     </aside>
 
-    <main ref="viewerElement" class="hidden min-w-0 flex-1 flex-col overflow-hidden bg-elevated sm:flex">
+    <div
+      class="group relative hidden w-1 shrink-0 cursor-col-resize touch-none bg-default transition-colors hover:bg-primary/60 sm:block"
+      :class="resizingSidebar ? 'bg-primary' : ''"
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize form sidebar"
+      @pointerdown="startSidebarResize"
+      @dblclick="resetSidebarWidth"
+    >
+      <span
+        class="absolute top-1/2 left-1/2 h-4 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accented transition-colors group-hover:bg-primary"
+        :class="resizingSidebar ? 'bg-primary' : ''"
+      />
+    </div>
+
+    <main ref="viewerElement" class="relative hidden min-w-0 flex-1 flex-col overflow-hidden bg-elevated sm:flex">
+      <div
+        v-if="sidebarExpanded"
+        class="absolute inset-0 z-20 grid cursor-pointer place-items-center bg-black/60"
+        role="button"
+        aria-label="Collapse form sidebar"
+        @click="collapseSidebar"
+      >
+        <UIcon name="i-lucide-panel-left-close" class="size-5 text-white/70" />
+      </div>
+
       <article v-if="document" class="flex min-h-0 flex-1 flex-col overflow-hidden bg-elevated">
         <div class="flex items-center justify-between gap-4 border-b border-default px-4 py-3">
           <div class="min-w-0">
@@ -202,6 +231,61 @@ const viewerElement = useTemplateRef<HTMLElement>("viewerElement");
 const panzoomTarget = useTemplateRef<HTMLElement>("panzoomTarget");
 let panzoom: PanzoomObject | undefined;
 let zoomWithWheel: PanzoomObject["zoomWithWheel"] | undefined;
+
+const defaultSidebarWidth = 384;
+const sidebarMinWidth = 384;
+const sidebarMaxWidth = 960;
+// Percentage of the page root (content viewport, excluding the app sidebar),
+// not vw — the aside's containing block is the flex row that fills the content area.
+const sidebarExpandedWidth = "90%";
+// How far past the max width the user must drag before the focus-mode snap engages.
+const sidebarExpandSnapPadding = 160;
+const sidebarWidth = useLocalStorage("khito:document-sidebar-width", defaultSidebarWidth);
+const sidebarExpanded = ref(false);
+const resizingSidebar = ref(false);
+let sidebarDragOrigin = { pointerX: 0, width: defaultSidebarWidth };
+
+function clampSidebarWidth(width: number) {
+  return Math.round(Math.min(Math.max(width, sidebarMinWidth), Math.min(sidebarMaxWidth, window.innerWidth - 480)));
+}
+
+function startSidebarResize(event: PointerEvent) {
+  resizingSidebar.value = true;
+  sidebarDragOrigin = { pointerX: event.clientX, width: sidebarWidth.value };
+}
+
+function moveSidebarResize(event: PointerEvent) {
+  if (!resizingSidebar.value) return;
+
+  const draggedWidth = sidebarDragOrigin.width + event.clientX - sidebarDragOrigin.pointerX;
+
+  if (draggedWidth > sidebarMaxWidth + sidebarExpandSnapPadding) {
+    sidebarExpanded.value = true;
+  }
+  else {
+    sidebarExpanded.value = false;
+    sidebarWidth.value = clampSidebarWidth(draggedWidth);
+  }
+
+  nextTick(updateMarkerPositions);
+}
+
+function stopSidebarResize() {
+  resizingSidebar.value = false;
+}
+
+function resetSidebarWidth() {
+  sidebarExpanded.value = false;
+  sidebarWidth.value = defaultSidebarWidth;
+}
+
+function collapseSidebar() {
+  if (!sidebarExpanded.value) return;
+
+  sidebarExpanded.value = false;
+  sidebarWidth.value = sidebarMinWidth;
+  nextTick(updateMarkerPositions);
+}
 
 const defaultZoom = 100;
 const minZoom = 100;
@@ -474,6 +558,11 @@ async function initViewer() {
 }
 
 onMounted(async () => {
+  sidebarWidth.value = clampSidebarWidth(sidebarWidth.value);
+  useEventListener(window, "pointermove", moveSidebarResize);
+  useEventListener(window, "pointerup", stopSidebarResize);
+  useEventListener(window, "pointercancel", stopSidebarResize);
+
   await loadDocument();
 
   if (document.value && document.value.extractionStatus !== "extracting") {
