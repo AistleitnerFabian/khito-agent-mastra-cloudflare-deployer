@@ -1,5 +1,5 @@
 <template>
-  <div v-if="loading || document?.extractionStatus === 'extracting'" class="flex min-h-screen items-center justify-center bg-default px-6 text-center">
+  <div v-if="loading || document?.extractionStatus === 'extracting'" class="flex h-full items-center justify-center bg-default px-6 text-center">
     <div>
       <UIcon :name="loading ? 'i-lucide-loader-circle' : 'i-lucide-sparkles'" class="mx-auto size-6 animate-spin text-dimmed" />
       <p class="mt-3 text-sm font-medium text-highlighted">{{ loading ? "Loading document…" : "Khito is extracting…" }}</p>
@@ -7,7 +7,7 @@
     </div>
   </div>
 
-  <div v-else-if="document?.extractionStatus === 'failed'" class="flex min-h-screen items-center justify-center bg-default px-6 text-center">
+  <div v-else-if="document?.extractionStatus === 'failed'" class="flex h-full items-center justify-center bg-default px-6 text-center">
     <div>
       <UIcon name="i-lucide-circle-alert" class="mx-auto size-6 text-error" />
       <p class="mt-3 text-sm font-medium text-highlighted">Extraction failed</p>
@@ -16,7 +16,7 @@
     </div>
   </div>
 
-  <div v-else-if="error" class="flex min-h-screen items-center justify-center bg-default px-6 text-center">
+  <div v-else-if="error" class="flex h-full items-center justify-center bg-default px-6 text-center">
     <div>
       <UIcon name="i-lucide-circle-alert" class="mx-auto size-6 text-error" />
       <p class="mt-3 text-sm font-medium text-highlighted">{{ error }}</p>
@@ -24,7 +24,7 @@
     </div>
   </div>
 
-  <div v-else-if="document" class="flex min-h-screen bg-default" :class="resizingSidebar ? 'cursor-col-resize select-none' : ''">
+  <div v-else-if="document" class="flex h-full overflow-hidden bg-default" :class="resizingSidebar ? 'cursor-col-resize select-none' : ''">
     <aside
       ref="formSidebar"
       class="w-full shrink-0 overflow-y-auto border-r border-default px-5 py-6 sm:px-6"

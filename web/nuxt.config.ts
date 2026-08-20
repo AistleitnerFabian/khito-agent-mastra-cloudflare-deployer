@@ -23,7 +23,10 @@ export default defineNuxtConfig({
     skipServerMiddleware: true,
   },
   ui: {
-    colorMode: false,
+    colorMode: true,
+  },
+  colorMode: {
+    storageKey: "khito-theme",
   },
   css: ["~/assets/css/main.css"],
   nitro: {

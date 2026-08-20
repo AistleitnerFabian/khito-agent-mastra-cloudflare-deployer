@@ -1,8 +1,8 @@
 <template>
-  <div class="flex min-h-screen w-full bg-default">
+  <div class="flex h-dvh w-full overflow-hidden bg-default">
     <AppSidebar />
 
-    <main class="w-full min-w-0 flex-1">
+    <main class="h-full w-full min-w-0 flex-1 overflow-y-auto">
       <slot />
     </main>
   </div>
