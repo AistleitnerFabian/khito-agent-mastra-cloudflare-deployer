@@ -81,6 +81,16 @@ export async function failInboxItemProcessing(database: InboxDatabase, id: strin
   }).where(eq(inboxItems.id, id)).run();
 }
 
+export async function linkInboxItemDocument(database: InboxDatabase, id: string, documentId: string) {
+  const updatedAt = new Date().toISOString();
+
+  await database.update(inboxItems).set({
+    status: "ready_to_create",
+    documentId,
+    updatedAt,
+  }).where(eq(inboxItems.id, id)).run();
+}
+
 export async function retryInboxItemProcessing(database: InboxDatabase, id: string) {
   const updatedAt = new Date().toISOString();
 

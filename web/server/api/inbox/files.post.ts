@@ -42,12 +42,13 @@ export default defineEventHandler(async (event) => {
     size: file.size,
     processingStatus: "pending" as const,
     documentType: null,
+    documentId: null,
     receivedAt: storedFile.uploaded.toISOString(),
   };
 
   try {
     await createInboxItem(useDatabase(event), inboxItem);
-    await dispatchInboxProcessing(event.context.cloudflare.env, inboxItem.id);
+    await dispatchInboxProcessing(event.context.cloudflare.env, { inboxItemId: inboxItem.id });
   }
   catch (error) {
     await deleteInboxItem(useDatabase(event), inboxItem.id);

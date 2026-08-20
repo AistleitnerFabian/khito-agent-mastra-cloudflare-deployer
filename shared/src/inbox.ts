@@ -1,6 +1,6 @@
-export type InboxProcessingMessage = {
-  inboxItemId: string;
-};
+export type InboxProcessingMessage =
+  | { inboxItemId: string }
+  | { documentId: string };
 
 export const documentTypes = ["order", "quotation", "invoice", "other"] as const;
 

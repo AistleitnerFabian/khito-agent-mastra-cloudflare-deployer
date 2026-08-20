@@ -6,6 +6,7 @@ export type InboxFile = {
   contentType: string;
   size: number;
   documentType: DocumentType | null;
+  documentId: string | null;
   processingStatus: "pending" | "processing" | "completed" | "failed";
   uploadedAt: string;
 };
@@ -18,6 +19,7 @@ export function toInboxFile(item: {
   contentType: string;
   size: number;
   documentType: DocumentType | null;
+  documentId: string | null;
   processingStatus: "pending" | "processing" | "completed" | "failed";
   receivedAt: string;
 }): InboxFile {
@@ -27,6 +29,7 @@ export function toInboxFile(item: {
     contentType: item.contentType,
     size: item.size,
     documentType: item.documentType,
+    documentId: item.documentId,
     processingStatus: item.processingStatus,
     uploadedAt: item.receivedAt,
   };

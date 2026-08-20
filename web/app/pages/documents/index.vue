@@ -1,257 +1,144 @@
 <template>
-  <div class="flex min-h-screen bg-default">
-    <aside class="w-full max-w-sm shrink-0 overflow-y-auto border-r border-default px-5 py-6 sm:px-6">
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <p class="text-sm font-semibold text-highlighted">Glass order</p>
-          <p class="mt-1 text-xs leading-5 text-muted">Select a field to locate its source in the document.</p>
-        </div>
-        <UBadge color="warning" variant="subtle" size="sm">Draft</UBadge>
+  <div class="flex min-h-screen flex-col bg-default">
+    <header class="border-b border-default px-6 py-5">
+      <p class="text-xs font-medium text-dimmed">Workspace</p>
+      <h1 class="mt-1 text-lg font-semibold text-highlighted">Documents</h1>
+    </header>
+
+    <main class="flex-1 px-6 py-6">
+      <div v-if="loading" class="py-16 text-center text-sm text-muted">Loading documents…</div>
+
+      <div v-else-if="error" class="py-16 text-center">
+        <p class="text-sm text-error">{{ error }}</p>
+        <UButton class="mt-3" size="xs" color="neutral" variant="outline" icon="i-lucide-rotate-cw" label="Retry" @click="loadDocuments" />
       </div>
 
-      <UFormField class="mt-4" label="Assigned to">
-        <USelect v-model="documentAssignee" :items="teamMemberOptions" class="w-full" />
-      </UFormField>
-
-      <USeparator class="my-6" />
-
-      <form class="space-y-4" @submit.prevent>
-        <div :class="fieldClass('project')" @focusin="activeField = 'project'">
-          <UFormField label="1 · Project" name="project" orientation="horizontal" :ui="horizontalFieldUi">
-            <UInput v-model="documentData.project" class="w-full" />
-          </UFormField>
-        </div>
-
-        <div :class="fieldClass('position')" @focusin="activeField = 'position'">
-          <UFormField label="2 · Position" name="position" orientation="horizontal" :ui="horizontalFieldUi">
-            <UTextarea v-model="documentData.position" class="w-full" :rows="3" />
-          </UFormField>
-        </div>
-
-        <div :class="fieldClass('glass-type')" @focusin="activeField = 'glass-type'">
-          <UFormField label="3 · Glass type" name="glass-type" orientation="horizontal" :ui="horizontalFieldUi">
-            <UTextarea v-model="documentData.glassType" class="w-full" :rows="3" />
-          </UFormField>
-        </div>
-
-        <div :class="fieldClass('glass-build-up')" @focusin="activeField = 'glass-build-up'">
-          <UFormField label="4 · Glass build-up" name="glass-build-up" orientation="horizontal" :ui="horizontalFieldUi">
-            <UTextarea v-model="documentData.glassBuildUp" class="w-full" :rows="5" />
-          </UFormField>
-        </div>
-
-        <div :class="fieldClass('remark')" @focusin="activeField = 'remark'">
-          <UFormField label="5 · Remark" name="remark" orientation="horizontal" :ui="horizontalFieldUi">
-            <UInput v-model="documentData.remark" class="w-full" />
-          </UFormField>
-        </div>
-      </form>
-
-      <div class="sticky bottom-0 mt-7 border-t border-default bg-default pt-4">
-        <UButton block label="Save document" />
+      <div v-else-if="!documents.length" class="py-16 text-center">
+        <UIcon name="i-lucide-files" class="mx-auto size-6 text-dimmed" />
+        <p class="mt-3 text-sm font-medium text-highlighted">No documents yet</p>
+        <p class="mt-1 text-xs leading-5 text-muted">Extract an order, quotation, or invoice from the Inbox to create one.</p>
+        <UButton class="mt-4" size="xs" variant="outline" icon="i-lucide-inbox" label="Go to Inbox" to="/inbox" />
       </div>
-    </aside>
 
-    <main ref="viewerElement" class="flex min-w-0 flex-1 flex-col overflow-hidden bg-elevated">
-      <article class="flex min-h-0 flex-1 flex-col overflow-hidden bg-elevated">
-        <div class="flex items-center justify-between gap-4 border-b border-default px-4 py-3">
-          <div class="min-w-0">
-            <p class="truncate text-xs font-medium text-highlighted">Glas-Bestellung · 1. Tour · Packliste EG</p>
-            <p class="mt-1 text-xs text-muted">Page 1 of 4 · {{ activeFieldLabel }}</p>
-          </div>
-          <UButton
-            class="shrink-0"
-            color="neutral"
-            variant="outline"
-            size="sm"
-            icon="i-lucide-rotate-ccw"
-            label="Reset to 100%"
-            @click="resetPdfZoom"
-          />
-        </div>
-
-        <div class="relative min-h-0 flex-1 overflow-hidden">
-          <div ref="panzoomTarget" class="absolute inset-0 p-3">
-            <div class="relative mx-auto aspect-[1191/1684] h-full max-w-full">
-              <img
-                class="size-full object-contain"
-                src="/documents/glas-packliste-page-1.png"
-                alt="First page of the glass order packing list"
-              >
-
-              <div
-                v-if="activeOverlay"
-                class="pointer-events-none absolute bg-primary/20"
-                :style="highlightStyle(activeOverlay.bounds)"
-              >
-                <span class="absolute left-0 bg-primary px-1.5 py-0.5 text-[10px] leading-none whitespace-nowrap text-inverted" :style="boundingBoxLabelStyle">
-                  {{ activeOverlay.index }} · {{ activeOverlay.label }}
-                </span>
-              </div>
-
-            </div>
-          </div>
-
-          <div class="pointer-events-none absolute inset-0 z-10">
-            <button
-              v-for="field in overlayFields"
-              :key="field.id"
-              class="panzoom-exclude pointer-events-auto absolute grid size-6 -translate-y-1/2 place-items-center border text-xs font-medium transition-colors"
-              :class="field.id === activeField ? 'border-primary bg-primary text-inverted' : 'border-primary/70 bg-default text-primary hover:bg-primary/10'"
-              :style="markerStyle(field)"
-              type="button"
-              :aria-label="`Locate ${field.label}`"
-              @click="activeField = field.id"
+      <div v-else class="overflow-hidden rounded-lg border border-default">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-default bg-elevated/50 text-left text-xs text-dimmed">
+              <th class="px-4 py-3 font-medium">Document</th>
+              <th class="px-4 py-3 font-medium">Type</th>
+              <th class="px-4 py-3 font-medium">Assignee</th>
+              <th class="px-4 py-3 font-medium">Status</th>
+              <th class="px-4 py-3 font-medium">Created</th>
+              <th class="w-10 px-4 py-3" aria-label="Open document" />
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="document in documents"
+              :key="document.id"
+              class="cursor-pointer border-b border-default transition-colors last:border-b-0 hover:bg-elevated"
+              @click="openDocument(document)"
             >
-              {{ field.index }}
-            </button>
-          </div>
-        </div>
-      </article>
+              <td class="max-w-0 px-4 py-3">
+                <div class="flex items-center gap-2">
+                  <UIcon name="i-lucide-file-text" class="size-4 shrink-0 text-dimmed" />
+                  <span class="truncate font-medium text-highlighted">{{ document.name }}</span>
+                </div>
+              </td>
+              <td class="px-4 py-3">
+                <UBadge :color="documentTypeBadges[document.documentType].color" variant="subtle" size="xs">
+                  {{ documentTypeBadges[document.documentType].label }}
+                </UBadge>
+              </td>
+              <td class="px-4 py-3 text-default">{{ document.assignee ?? "Unassigned" }}</td>
+              <td class="px-4 py-3">
+                <span v-if="document.extractionStatus === 'extracting'" class="flex items-center gap-2 text-xs text-muted">
+                  <UIcon name="i-lucide-loader-circle" class="size-3.5 animate-spin" />
+                  Khito is extracting…
+                </span>
+                <span v-else-if="document.extractionStatus === 'failed'" class="flex items-center gap-2 text-xs text-error">
+                  <UIcon name="i-lucide-circle-alert" class="size-3.5" />
+                  Extraction failed
+                </span>
+                <span v-else class="flex items-center gap-2 text-xs text-muted">
+                  <UIcon name="i-lucide-circle-check" class="size-3.5 text-success" />
+                  Ready
+                </span>
+              </td>
+              <td class="px-4 py-3 text-xs text-dimmed">{{ formatCreatedAt(document.createdAt) }}</td>
+              <td class="px-4 py-3">
+                <UIcon name="i-lucide-chevron-right" class="size-4 text-dimmed" />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import Panzoom, { type PanzoomObject } from "@panzoom/panzoom";
-const documentData = reactive({
-  project: "2025-9467 · NB Kita Münster-Sarmsheim",
-  position: "1.4 (105) / 1.4a (106) / 1.5 (107) / 1.6 (108)",
-  glassType: "GT1 VSG 6 (0,38) / Float 4 / VSG 6 (0,38)",
-  glassBuildUp: "Outside 6 VSG from Float 0,38\nMiddle 4 Floatglass\nInside 6 VSG from Float 0,38\nTotal ~51 mm",
-  remark: "Sonnenschutzglas g=0,4",
-});
+import type { DocumentExtractionStatus } from "@khito/shared/documents";
+import type { ExtractableDocumentType } from "@khito/shared/inbox";
 
-const documentAssignee = ref("Fabian Aistleitner");
-const teamMemberOptions = ["Unassigned", "Fabian Aistleitner", "Lena Hoffmann", "Max Berger"];
-
-const activeField = ref("project");
-const defaultZoom = 100;
-const minZoom = 100;
-const maxZoom = 400;
-const documentScale = ref(defaultZoom / 100);
-const viewerElement = useTemplateRef<HTMLElement>("viewerElement");
-const panzoomTarget = useTemplateRef<HTMLElement>("panzoomTarget");
-let panzoom: PanzoomObject | undefined;
-let zoomWithWheel: PanzoomObject["zoomWithWheel"] | undefined;
-const horizontalFieldUi = {
-  root: "grid grid-cols-[7rem_minmax(0,1fr)] items-start gap-3",
-  labelWrapper: "pt-2 text-left",
-  label: "text-xs font-normal text-muted",
-  container: "w-full min-w-0 justify-self-end",
+type DocumentListItem = {
+  id: string;
+  name: string;
+  documentType: ExtractableDocumentType;
+  assignee: string | null;
+  extractionStatus: DocumentExtractionStatus;
+  extractionError: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
-const overlayFields = [
-  {
-    id: "project",
-    index: 1,
-    label: "Project",
-    position: { top: "15.5%", left: "0" },
-    bounds: { top: "15.8%", left: "27%", width: "32%", height: "2.2%" },
-  },
-  {
-    id: "position",
-    index: 2,
-    label: "Position",
-    position: { top: "19.5%", left: "0" },
-    bounds: { top: "17.4%", left: "27%", width: "62%", height: "4.3%" },
-  },
-  {
-    id: "glass-type",
-    index: 3,
-    label: "Glass type",
-    position: { top: "24%", left: "0" },
-    bounds: { top: "23%", left: "39%", width: "32%", height: "2.4%" },
-  },
-  {
-    id: "glass-build-up",
-    index: 4,
-    label: "Glass build-up",
-    position: { top: "28%", left: "0" },
-    bounds: { top: "24.4%", left: "39%", width: "36%", height: "18.4%" },
-  },
-  {
-    id: "remark",
-    index: 5,
-    label: "Remark",
-    position: { top: "47%", left: "0" },
-    bounds: { top: "47.1%", left: "39%", width: "19%", height: "2.3%" },
-  },
-];
+const documents = ref<DocumentListItem[]>([]);
+const loading = ref(true);
+const error = ref("");
+const clerkFetch = useClerkFetch();
 
-const activeFieldLabel = computed(() => overlayFields.find(field => field.id === activeField.value)?.label ?? "Document field");
-const activeOverlay = computed(() => overlayFields.find(field => field.id === activeField.value));
-const markerPositions = ref<Record<string, { top: string; left: string }>>({});
+const documentTypeBadges: Record<ExtractableDocumentType, { label: string; color: "primary" | "secondary" | "info" }> = {
+  order: { label: "Order", color: "primary" },
+  quotation: { label: "Quotation", color: "secondary" },
+  invoice: { label: "Invoice", color: "info" },
+};
 
-function fieldClass(fieldId: string) {
-  return activeField.value === fieldId ? "-m-2 rounded-sm bg-primary/10 p-2" : "-m-2 p-2";
+const hasActiveExtractions = computed(() => documents.value.some(document => document.extractionStatus === "extracting"));
+
+function formatCreatedAt(createdAt: string) {
+  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(createdAt));
 }
 
-function resetPdfZoom() {
-  panzoom?.reset({ animate: false });
-  documentScale.value = defaultZoom / 100;
+function openDocument(document: DocumentListItem) {
+  if (document.extractionStatus === "extracting") return;
+  void navigateTo(`/documents/${document.id}`);
 }
 
-function highlightStyle(bounds: Record<string, string>) {
-  return bounds;
+async function loadDocuments() {
+  try {
+    documents.value = await clerkFetch<DocumentListItem[]>("/api/documents");
+  }
+  catch {
+    error.value = "The documents could not be loaded.";
+  }
 }
 
-function markerStyle(field: typeof overlayFields[number]) {
-  return markerPositions.value[field.id] ?? field.position;
-}
+let extractionPoller: number | undefined;
 
-function updateMarkerPositions() {
-  const target = panzoomTarget.value;
-  const canvas = target?.parentElement;
-  const document = target?.firstElementChild;
-  if (!canvas || !document) return;
+onMounted(async () => {
+  await loadDocuments();
+  loading.value = false;
 
-  const canvasBounds = canvas.getBoundingClientRect();
-  const documentBounds = document.getBoundingClientRect();
-  const markerLeft = Math.max(0, documentBounds.left - canvasBounds.left);
-
-  markerPositions.value = Object.fromEntries(overlayFields.map((field) => {
-    const top = documentBounds.top - canvasBounds.top + (documentBounds.height * Number.parseFloat(field.position.top) / 100);
-    return [field.id, { top: `${top}px`, left: `${markerLeft}px` }];
-  }));
-}
-
-function handlePanzoomChange(event: Event) {
-  documentScale.value = (event as CustomEvent<{ scale: number }>).detail.scale;
-  nextTick(updateMarkerPositions);
-}
-
-const boundingBoxLabelStyle = computed(() => ({
-  top: "0px",
-  transform: `scale(${1 / documentScale.value}) translateY(-100%)`,
-  transformOrigin: "top left",
-}));
-
-onMounted(() => {
-  const target = panzoomTarget.value;
-  const viewer = viewerElement.value;
-  if (!target || !viewer) return;
-
-  panzoom = Panzoom(target, {
-    canvas: true,
-    contain: "outside",
-    cursor: "grab",
-    maxScale: maxZoom / 100,
-    minScale: minZoom / 100,
-    panOnlyWhenZoomed: true,
-    step: 0.25,
-  });
-  zoomWithWheel = panzoom.zoomWithWheel;
-  viewer.addEventListener("wheel", zoomWithWheel);
-  target.addEventListener("panzoomchange", handlePanzoomChange);
-  window.addEventListener("resize", updateMarkerPositions);
-  nextTick(updateMarkerPositions);
+  extractionPoller = window.setInterval(() => {
+    if (hasActiveExtractions.value) {
+      void loadDocuments();
+    }
+  }, 3_000);
 });
 
 onBeforeUnmount(() => {
-  if (zoomWithWheel) viewerElement.value?.removeEventListener("wheel", zoomWithWheel);
-  panzoomTarget.value?.removeEventListener("panzoomchange", handlePanzoomChange);
-  window.removeEventListener("resize", updateMarkerPositions);
-  panzoom?.destroy();
+  if (extractionPoller) {
+    clearInterval(extractionPoller);
+  }
 });
 </script>

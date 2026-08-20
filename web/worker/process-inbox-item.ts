@@ -1,4 +1,4 @@
-import { createInboxExtractionKey, type DocumentType, type InboxProcessingMessage } from "@khito/shared/inbox";
+import { createInboxExtractionKey, type DocumentType } from "@khito/shared/inbox";
 import {
   completeInboxItemProcessing,
   failInboxItemProcessing,
@@ -28,7 +28,7 @@ function toErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "The inbox item could not be processed.";
 }
 
-export async function processInboxItem(message: InboxProcessingMessage, services: InboxProcessingServices) {
+export async function processInboxItem(message: { inboxItemId: string }, services: InboxProcessingServices) {
   const item = await findInboxItem(services.database, message.inboxItemId);
 
   if (!item || item.processingStatus === "completed") {

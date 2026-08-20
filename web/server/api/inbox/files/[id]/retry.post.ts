@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
   }
 
   await retryInboxItemProcessing(database, id);
-  await dispatchInboxProcessing(event.context.cloudflare.env, id);
+  await dispatchInboxProcessing(event.context.cloudflare.env, { inboxItemId: id });
 
   return { processingStatus: "pending" as const };
 });

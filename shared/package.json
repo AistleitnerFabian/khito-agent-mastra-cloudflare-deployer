@@ -5,7 +5,9 @@
   "type": "module",
   "exports": {
     "./inbox": "./src/inbox.ts",
-    "./inbox-database": "./src/inbox-database.ts"
+    "./inbox-database": "./src/inbox-database.ts",
+    "./documents": "./src/documents.ts",
+    "./documents-database": "./src/documents-database.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2"

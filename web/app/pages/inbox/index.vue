@@ -143,15 +143,25 @@
         <aside class="border-t border-default p-6 xl:w-80 xl:border-t-0 xl:border-l">
           <div class="space-y-2">
             <UButton
-              v-if="isExtractableDocumentType(selectedEmail.documentType)"
+              v-if="isExtractableDocumentType(selectedEmail.documentType) && !selectedEmail.documentId"
               block
               icon="i-lucide-file-plus-2"
               label="Extract document"
+              :loading="extractingDocument"
+              :disabled="extractingDocument"
               @click="extractDocument"
+            />
+            <UButton
+              v-else-if="selectedEmail.documentId"
+              block
+              icon="i-lucide-file-text"
+              label="Open document"
+              @click="navigateTo(`/documents/${selectedEmail.documentId}`)"
             />
             <p v-else-if="selectedEmail.processingStatus === 'completed'" class="text-xs leading-5 text-muted">
               Not an order, quotation, or invoice — nothing to extract.
             </p>
+            <p v-if="extractError" class="text-xs text-error">{{ extractError }}</p>
             <UButton block color="neutral" variant="outline" label="Ignore" @click="ignoreEmail" />
           </div>
 
@@ -183,6 +193,7 @@ type ForwardedEmail = {
   assignee: string;
   status: "Needs triage" | "Ready to create" | "Not a document";
   documentType: DocumentType | null;
+  documentId: string | null;
   processingStatus: StoredInboxFile["processingStatus"];
   storedInboxItem: boolean;
 };
@@ -193,6 +204,7 @@ type StoredInboxFile = {
   contentType: string;
   size: number;
   documentType: DocumentType | null;
+  documentId: string | null;
   processingStatus: "pending" | "processing" | "completed" | "failed";
   uploadedAt: string;
 };
@@ -218,6 +230,8 @@ const doclingOutputError = ref("");
 const doclingOutputLoading = ref(false);
 const doclingOutputStatus = ref("");
 const retryingDocling = ref(false);
+const extractingDocument = ref(false);
+const extractError = ref("");
 const teamMemberOptions = ["Unassigned", "Fabian Aistleitner", "Lena Hoffmann", "Max Berger"];
 const documentTypeBadges: Record<DocumentType, { label: string; color: "primary" | "secondary" | "info" | "neutral" }> = {
   order: { label: "Order", color: "primary" },
@@ -234,9 +248,25 @@ const doclingOutputText = computed(() => {
 
 const hasActiveDoclingJobs = computed(() => forwardedEmails.value.some(email => email.processingStatus === "pending" || email.processingStatus === "processing"));
 
-function extractDocument() {
-  if (!selectedEmail.value) return;
-  selectedEmail.value.status = "Ready to create";
+async function extractDocument() {
+  const email = selectedEmail.value;
+  if (!email?.storedInboxItem || email.documentId || extractingDocument.value) return;
+
+  extractingDocument.value = true;
+  extractError.value = "";
+
+  try {
+    const { documentId } = await clerkFetch<{ documentId: string }>(`/api/inbox/files/${email.id}/extract`, { method: "POST" });
+    email.documentId = documentId;
+    email.status = "Ready to create";
+    await navigateTo(`/documents/${documentId}`);
+  }
+  catch (error) {
+    extractError.value = error instanceof Error ? error.message : "The document could not be extracted.";
+  }
+  finally {
+    extractingDocument.value = false;
+  }
 }
 
 function ignoreEmail() {
@@ -257,6 +287,7 @@ function inboxEntryFromFile(file: StoredInboxFile): ForwardedEmail {
     assignee: "Unassigned",
     status: "Needs triage",
     documentType: file.documentType,
+    documentId: file.documentId,
     storedInboxItem: true,
     processingStatus: file.processingStatus,
   };

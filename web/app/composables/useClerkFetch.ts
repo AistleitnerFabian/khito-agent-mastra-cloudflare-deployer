@@ -1,6 +1,6 @@
 type InboxFetchOptions = {
-  body?: FormData;
-  method?: "POST";
+  body?: FormData | Record<string, unknown>;
+  method?: "POST" | "PATCH" | "DELETE";
 };
 
 export function useClerkFetch() {
@@ -12,6 +12,10 @@ export function useClerkFetch() {
 
     if (token) {
       headers.set("Authorization", `Bearer ${token}`);
+    }
+
+    if (options.body && !(options.body instanceof FormData)) {
+      headers.set("content-type", "application/json");
     }
 
     return $fetch(request, { ...options, headers }) as Promise<T>;
