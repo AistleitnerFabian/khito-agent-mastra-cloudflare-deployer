@@ -49,10 +49,9 @@
       </div>
     </div>
 
-    <div ref="scrollContainer" class="relative min-h-0 flex-1 overflow-hidden">
+    <div class="relative min-h-0 flex-1 overflow-hidden">
       <div ref="panzoomTarget" class="absolute inset-0 p-3">
         <div
-          ref="pageFrame"
           class="relative mx-auto h-full max-w-full"
           :style="{ aspectRatio: pageAspectRatio }"
         >
@@ -119,8 +118,6 @@ let pdfDocument: PDFDocumentProxy | undefined;
 let renderToken = 0;
 
 const viewerRoot = useTemplateRef<HTMLElement>("viewerRoot");
-const scrollContainer = useTemplateRef<HTMLElement>("scrollContainer");
-const pageFrame = useTemplateRef<HTMLElement>("pageFrame");
 const panzoomTarget = useTemplateRef<HTMLElement>("panzoomTarget");
 let panzoom: PanzoomObject | undefined;
 let zoomWithWheel: PanzoomObject["zoomWithWheel"] | undefined;
@@ -271,13 +268,18 @@ function initViewer() {
   nextTick(updateMarkerPositions);
 }
 
-// Tracks every layout change that moves the page — the form sidebar dragging
-// and its CSS width transition, window and popup-window resizes — so the field
-// markers stay glued to the page during animations, not just at their end.
-// The page frame is observed as well: its size changes with the aspect ratio
-// even when the surrounding container happens to keep its own dimensions.
-useResizeObserver([scrollContainer, pageFrame], () => updateMarkerPositions());
-useEventListener(window, "resize", updateMarkerPositions);
+// Field markers are derived from live layout: pan/zoom transforms, the form
+// sidebar drag and its CSS transition, window and popup-window resizes,
+// aspect-ratio changes. Instead of chasing every possible layout source, the
+// positions are re-measured every animation frame — two getBoundingClientRect
+// calls plus arithmetic stay far below a frame budget, and the loop cannot miss
+// a layout change the way individual listeners did.
+let markersAnimationFrame = 0;
+
+function markersFrame() {
+  updateMarkerPositions();
+  markersAnimationFrame = requestAnimationFrame(markersFrame);
+}
 
 watch(activePage, () => {
   void renderActivePage();
@@ -293,12 +295,15 @@ watch(activeField, () => {
 });
 
 onMounted(async () => {
+  markersAnimationFrame = requestAnimationFrame(markersFrame);
+
   await nextTick();
   await loadPdf();
   initViewer();
 });
 
 onBeforeUnmount(() => {
+  cancelAnimationFrame(markersAnimationFrame);
   if (zoomWithWheel) viewerRoot.value?.removeEventListener("wheel", zoomWithWheel);
   panzoomTarget.value?.removeEventListener("panzoomchange", handlePanzoomChange);
   panzoom?.destroy();
