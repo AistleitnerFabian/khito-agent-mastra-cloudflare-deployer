@@ -152,7 +152,8 @@ let draggedSidebarWidth = defaultSidebarWidth;
 
 // The viewer area shows the blur overlay while it is either in focus mode or
 // popped out into its own window. Both give the form the full content viewport;
-// reattaching collapses it back to the minimum width, like the focus mode.
+// closing either restores the sidebar to the width it had before, since
+// sidebarWidth is never overwritten while the viewer is hidden.
 const viewerPoppedOut = ref(false);
 const viewerHidden = computed(() => sidebarExpanded.value || viewerPoppedOut.value);
 let viewerPopoutWindow: Window | null = null;
@@ -175,8 +176,6 @@ function reattachViewer() {
   viewerPopoutWindow?.close();
   viewerPopoutWindow = null;
   viewerPoppedOut.value = false;
-  sidebarExpanded.value = false;
-  sidebarWidth.value = sidebarMinWidth;
   formSidebar.value?.style.removeProperty("max-width");
   pausePopoutCheck();
 }
@@ -253,7 +252,6 @@ function collapseSidebar() {
   if (!sidebarExpanded.value) return;
 
   sidebarExpanded.value = false;
-  sidebarWidth.value = sidebarMinWidth;
   formSidebar.value?.style.removeProperty("max-width");
 }
 
