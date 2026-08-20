@@ -71,7 +71,7 @@
 
     <div
       class="group relative hidden w-1 shrink-0 cursor-col-resize touch-none bg-default transition-colors hover:bg-primary/60 sm:block"
-      :class="resizingSidebar ? 'bg-primary' : ''"
+      :class="[resizingSidebar ? 'bg-primary' : '', sidebarExpanded ? 'pointer-events-none opacity-40' : '']"
       role="separator"
       aria-orientation="vertical"
       aria-label="Resize form sidebar"
@@ -87,12 +87,12 @@
     <main ref="viewerElement" class="relative hidden min-w-0 flex-1 flex-col overflow-hidden bg-elevated sm:flex">
       <div
         v-if="sidebarExpanded"
-        class="absolute inset-0 z-20 grid cursor-pointer place-items-center bg-black/60"
+        class="absolute inset-0 z-20 grid cursor-pointer place-items-center bg-black/80 backdrop-blur-[2px]"
         role="button"
         aria-label="Collapse form sidebar"
         @click="collapseSidebar"
       >
-        <UIcon name="i-lucide-panel-left-close" class="size-5 text-white/70" />
+        <UIcon name="i-lucide-panel-left-close" class="size-5 text-white/50" />
       </div>
 
       <article v-if="document" class="flex min-h-0 flex-1 flex-col overflow-hidden bg-elevated">
@@ -250,6 +250,8 @@ function clampSidebarWidth(width: number) {
 }
 
 function startSidebarResize(event: PointerEvent) {
+  if (sidebarExpanded.value) return;
+
   resizingSidebar.value = true;
   sidebarDragOrigin = { pointerX: event.clientX, width: sidebarWidth.value };
 }
@@ -274,9 +276,23 @@ function stopSidebarResize() {
   resizingSidebar.value = false;
 }
 
+// The sidebar width animates via CSS transition, so a single nextTick would
+// measure the mid-transition layout and leave the field markers misplaced.
+function animateMarkerPositions(durationMilliseconds = 250) {
+  const startedAt = performance.now();
+
+  function frame(now: number) {
+    updateMarkerPositions();
+    if (now - startedAt < durationMilliseconds) requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(frame);
+}
+
 function resetSidebarWidth() {
   sidebarExpanded.value = false;
   sidebarWidth.value = defaultSidebarWidth;
+  animateMarkerPositions();
 }
 
 function collapseSidebar() {
@@ -284,7 +300,7 @@ function collapseSidebar() {
 
   sidebarExpanded.value = false;
   sidebarWidth.value = sidebarMinWidth;
-  nextTick(updateMarkerPositions);
+  animateMarkerPositions();
 }
 
 const defaultZoom = 100;
