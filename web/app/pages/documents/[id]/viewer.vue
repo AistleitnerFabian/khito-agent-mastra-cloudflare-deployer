@@ -18,7 +18,7 @@
 
 <script setup lang="ts">
 import { documentDataFields, type DocumentDataField } from "@khito/shared/documents";
-import type { DocumentDetail } from "~/types/documents";
+import type { DocumentDetail, DocumentViewerSyncMessage } from "~/types/documents";
 
 definePageMeta({ layout: false });
 
@@ -30,6 +30,32 @@ const loading = ref(true);
 const error = ref("");
 const activeField = ref<DocumentDataField>("project");
 
+// Field selection is linked with the main document window: both broadcast
+// their changes and adopt each other's, so form clicks highlight here and
+// marker clicks here highlight the form — like the inline viewer. One static
+// channel is shared by all document windows; the document id rides inside
+// each message so the link can never go stale.
+const windowId = Math.random().toString(36).slice(2);
+let syncChannel: BroadcastChannel | null = null;
+
+onMounted(() => {
+  syncChannel = new BroadcastChannel("khito-document-viewer");
+  syncChannel.onmessage = (event: MessageEvent<DocumentViewerSyncMessage>) => {
+    const message = event.data;
+    if (message.source === windowId || message.docId !== String(route.params.id)) return;
+    activeField.value = message.fieldId;
+  };
+});
+
+onBeforeUnmount(() => {
+  syncChannel?.close();
+  syncChannel = null;
+});
+
+watch(activeField, (fieldId) => {
+  syncChannel?.postMessage({ docId: String(route.params.id), source: windowId, fieldId });
+});
+
 useTitle(() => document.value ? `${document.value.name} · Khito` : "Khito document viewer");
 
 onMounted(async () => {
@@ -39,6 +65,13 @@ onMounted(async () => {
   try {
     document.value = await clerkFetch<DocumentDetail>(`/api/documents/${route.params.id}`);
     activeField.value = documentDataFields.find(field => document.value?.bounds[field.id]?.length)?.id ?? "project";
+
+    // Adopt the main window's current field instead of resetting to the first
+    // bounded one — the popout continues the context it was opened from.
+    const queryField = route.query.field;
+    if (typeof queryField === "string" && documentDataFields.some(field => field.id === queryField)) {
+      activeField.value = queryField as DocumentDataField;
+    }
   }
   catch (loadError) {
     error.value = loadError instanceof Error ? loadError.message : "The document could not be loaded.";

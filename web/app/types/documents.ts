@@ -1,4 +1,4 @@
-import type { DocumentBounds, DocumentExtractionStatus, ExtractedDocumentData } from "@khito/shared/documents";
+import type { DocumentBounds, DocumentExtractionStatus, ExtractedDocumentData, DocumentDataField } from "@khito/shared/documents";
 import type { ExtractableDocumentType } from "@khito/shared/inbox";
 
 export type DocumentDetail = {
@@ -14,4 +14,13 @@ export type DocumentDetail = {
   extractionError: string | null;
   createdAt: string;
   updatedAt: string;
+};
+
+// Cross-window sync between the document page and its popped-out viewer: all
+// document windows share one static channel, so the document id rides inside
+// each message, and each window stamps its own source id to ignore its echoes.
+export type DocumentViewerSyncMessage = {
+  docId: string;
+  source: string;
+  fieldId: DocumentDataField;
 };

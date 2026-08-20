@@ -1,6 +1,6 @@
 <template>
   <article ref="viewerRoot" class="flex min-h-0 flex-1 flex-col overflow-hidden bg-elevated">
-    <div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4 border-b border-default px-4 py-3">
+    <div v-if="!hudHidden" class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4 border-b border-default px-4 py-3">
       <div class="min-w-0">
         <p class="truncate text-xs font-medium text-highlighted">{{ detail.name }}</p>
         <p class="mt-1 text-xs text-muted">{{ activeFieldLabel }}</p>
@@ -57,24 +57,26 @@
         >
           <canvas ref="pdfCanvas" class="size-full object-contain" />
 
-          <div
-            v-for="(bound, boundIndex) in activeFieldBounds"
-            :key="boundIndex"
-            class="pointer-events-none absolute bg-primary/20"
-            :style="boundStyle(bound)"
-          >
-            <span
-              v-if="boundIndex === 0"
-              class="absolute left-0 bg-primary px-1.5 py-0.5 text-[10px] leading-none whitespace-nowrap text-inverted"
-              :style="boundingBoxLabelStyle"
+          <template v-if="!hudHidden">
+            <div
+              v-for="(bound, boundIndex) in activeFieldBounds"
+              :key="boundIndex"
+              class="pointer-events-none absolute bg-primary/20"
+              :style="boundStyle(bound)"
             >
-              {{ activeFieldIndex }} · {{ activeFieldLabel }}
-            </span>
-          </div>
+              <span
+                v-if="boundIndex === 0"
+                class="absolute left-0 bg-primary px-1.5 py-0.5 text-[10px] leading-none whitespace-nowrap text-inverted"
+                :style="boundingBoxLabelStyle"
+              >
+                {{ activeFieldIndex }} · {{ activeFieldLabel }}
+              </span>
+            </div>
+          </template>
         </div>
       </div>
 
-      <div class="pointer-events-none absolute inset-0 z-10">
+      <div v-if="!hudHidden" class="pointer-events-none absolute inset-0 z-10">
         <button
           v-for="marker in pageMarkers"
           :key="marker.id"
@@ -102,6 +104,10 @@ import type { DocumentDetail } from "~/types/documents";
 const props = defineProps<{
   detail: DocumentDetail;
   canPopOut?: boolean;
+  /** Hides all viewer HUD — header, field markers and bounding boxes — while
+   * the inline viewer is covered by the blur overlay, so only the PDF itself
+   * appears blurred instead of smeared overlays. */
+  hudHidden?: boolean;
 }>();
 
 const activeField = defineModel<DocumentDataField>("activeField", { required: true });

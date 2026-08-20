@@ -56,7 +56,13 @@
       <USeparator class="my-6" />
 
       <form class="space-y-4" @submit.prevent>
-        <div v-for="field in documentDataFields" :key="field.id" :class="fieldClass(field.id)" @focusin="selectField(field.id)">
+        <div
+          v-for="field in documentDataFields"
+          :key="field.id"
+          :ref="(element: unknown) => setFieldElement(field.id, element)"
+          :class="fieldClass(field.id)"
+          @focusin="selectField(field.id)"
+        >
           <UFormField :label="`${field.index} · ${field.label}`" :name="field.id" orientation="horizontal" :ui="horizontalFieldUi">
             <UTextarea v-model="documentData[field.id]" class="w-full" :rows="field.id === 'glassBuildUp' || field.id === 'position' ? 4 : 2" />
           </UFormField>
@@ -103,6 +109,7 @@
         v-if="document"
         v-model:active-field="activeField"
         :detail="document"
+        :hud-hidden="viewerHidden"
         can-pop-out
         @popout="popoutViewer"
       />
@@ -112,7 +119,7 @@
 
 <script setup lang="ts">
 import { documentDataFields, documentDataFieldIds, type DocumentDataField, type ExtractedDocumentData } from "@khito/shared/documents";
-import type { DocumentDetail } from "~/types/documents";
+import type { DocumentDetail, DocumentViewerSyncMessage } from "~/types/documents";
 
 const route = useRoute();
 const clerkFetch = useClerkFetch();
@@ -133,6 +140,43 @@ function toEmptyDocumentData(): ExtractedDocumentData {
 const documentData = ref<ExtractedDocumentData>(toEmptyDocumentData());
 const initialDataJson = ref("");
 const activeField = ref<DocumentDataField>("project");
+
+// Field selection is linked with the popped-out viewer window: both windows
+// broadcast their changes and adopt each other's, so form clicks highlight in
+// the popup and marker clicks there highlight the form — like the inline viewer.
+// One static channel is shared by all document windows and the document id
+// rides inside each message — a name baked from route params at setup time
+// goes stale when this page component is reused across documents.
+const windowId = Math.random().toString(36).slice(2);
+let viewerSyncChannel: BroadcastChannel | null = null;
+
+onMounted(() => {
+  viewerSyncChannel = new BroadcastChannel("khito-document-viewer");
+  viewerSyncChannel.onmessage = (event: MessageEvent<DocumentViewerSyncMessage>) => {
+    const message = event.data;
+    if (message.source === windowId || message.docId !== String(route.params.id)) return;
+    activeField.value = message.fieldId;
+  };
+});
+
+onBeforeUnmount(() => {
+  viewerSyncChannel?.close();
+  viewerSyncChannel = null;
+});
+
+// Field rows keyed by id, so a selection arriving from the popped-out viewer
+// can scroll its form row into view — without this, a highlight landing below
+// the fold reads as the sync doing nothing.
+const fieldElements: Partial<Record<DocumentDataField, HTMLElement>> = {};
+
+function setFieldElement(fieldId: DocumentDataField, element: unknown) {
+  if (element instanceof HTMLElement) fieldElements[fieldId] = element;
+}
+
+watch(activeField, (fieldId) => {
+  viewerSyncChannel?.postMessage({ docId: String(route.params.id), source: windowId, fieldId });
+  fieldElements[fieldId]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+});
 
 const defaultSidebarWidth = 384;
 const sidebarMinWidth = 384;
@@ -165,7 +209,9 @@ const { pause: pausePopoutCheck, resume: resumePopoutCheck } = useIntervalFn(() 
 function popoutViewer() {
   if (viewerPoppedOut.value) return;
 
-  viewerPopoutWindow = window.open(`/documents/${route.params.id}/viewer`, "khito-document-viewer", "popup,width=1100,height=800");
+  // The current field rides along as a query param so the popup starts in the
+  // same context; live changes afterwards flow through the broadcast channel.
+  viewerPopoutWindow = window.open(`/documents/${route.params.id}/viewer?field=${activeField.value}`, "khito-document-viewer", "popup,width=1100,height=800");
   if (!viewerPopoutWindow) return;
 
   viewerPoppedOut.value = true;
