@@ -1,0 +1,64 @@
+diff --git a/dist/json-schema-BstKYbJi.js b/dist/json-schema-BstKYbJi.js
+index 93c78e2819eeef51fdf7780157312f220a9385db..8ababf62c3af611f71931bf9ebfffb3c05e6850a 100644
+--- a/dist/json-schema-BstKYbJi.js
++++ b/dist/json-schema-BstKYbJi.js
+@@ -1,4 +1,6 @@
+ import { n as __commonJSMin, r as __toESM, t as require_json_schema_traverse } from "./json-schema-traverse-B35mHRM8.js";
++import { convertJsonSchemaToZod } from "zod-from-json-schema";
++const runsOnWorkerd = typeof navigator !== "undefined" && navigator.userAgent.includes("Cloudflare");
+ //#region ../../../../../setup-pnpm/node_modules/.bin/store/v11/links/@/ajv/8.20.0/45a7731a7f226afbb54bce5941cf72055c748f37aa24c1b293e6625f57e4ce6e/node_modules/ajv/dist/compile/codegen/code.js
+ var require_code$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
+ 	Object.defineProperty(exports, "__esModule", { value: true });
+@@ -6637,6 +6639,7 @@ var JsonSchemaWrapper = class {
+ 	#schema;
+ 	#options;
+ 	#ajvValidateCache = null;
++	#zodValidateCache = null;
+ 	#ajvInstance = null;
+ 	"~standard";
+ 	constructor(schema, options = {}) {
+@@ -6659,6 +6662,7 @@ var JsonSchemaWrapper = class {
+ 	* @returns A result object with either the validated value or validation issues
+ 	*/
+ 	#validate(value) {
++		if (runsOnWorkerd) return this.#validateWithZod(value);
+ 		try {
+ 			const validateFn = this.#getAjvValidator();
+ 			const result = validateFn(value);
+@@ -6678,6 +6682,36 @@ var JsonSchemaWrapper = class {
+ 		}
+ 	}
+ 	/**
++	* Validates a value against the JSON Schema using a zod conversion.
++	*
++	* Used on runtimes where dynamic code evaluation is unavailable (e.g. Cloudflare
++	* Workers), where Ajv cannot compile validators via `new Function`.
++	*
++	* @param value - The value to validate
++	* @returns A result object with either the validated value or validation issues
++	*/
++	#validateWithZod(value) {
++		try {
++			const zodSchema = this.#getZodValidator();
++			const result = zodSchema.safeParse(value);
++			if (result.success) return { value };
++			return { issues: result.error.issues.map((issue) => ({
++				message: issue.message,
++				path: issue.path
++			})) };
++		} catch (error) {
++			return { issues: [{ message: `Schema validation error: ${error instanceof Error ? error.message : "Unknown validation error"}` }] };
++		}
++	}
++	/**
++	* Gets or creates a zod schema converted from the JSON Schema.
++	* The converted schema is cached for performance.
++	*/
++	#getZodValidator() {
++		this.#zodValidateCache ??= convertJsonSchemaToZod(this.#schema);
++		return this.#zodValidateCache;
++	}
++	/**
+ 	* Converts an Ajv instance path (e.g., "/foo/0/bar") to a Standard Schema path array.
+ 	*
+ 	* @param instancePath - The Ajv instance path

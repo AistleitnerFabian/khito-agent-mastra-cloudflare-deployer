@@ -1,8 +1,8 @@
 diff --git a/dist/index.js b/dist/index.js
-index 1d437a53fb4fdf261170c6d43637a73b65e6e949..ebdd26ba9ca700879477f1620eef21eaaefb6c44 100644
+index 1d437a53fb4fdf261170c6d43637a73b65e6e949..9b6166a8782c8903110d04059884c06f80b410d0 100644
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -31,11 +31,24 @@ function mastraInstanceWrapper$1() {
+@@ -31,12 +31,50 @@ function mastraInstanceWrapper$1() {
  	const exportName = "mastra";
  	const className = "Mastra";
  	const t = babel.types;
@@ -10,6 +10,26 @@ index 1d437a53fb4fdf261170c6d43637a73b65e6e949..ebdd26ba9ca700879477f1620eef21ea
 +		const options = mastraInstance.arguments[0];
 +		if (!t.isObjectExpression(options)) return;
 +		options.properties = options.properties.filter(property => !t.isObjectProperty(property) || !t.isIdentifier(property.key, { name: "deployer" }));
++	};
++	// Wraps the lazily-created Mastra instance in a factory that also accepts
++	// file-system routed agents: the generated fs-agents entry calls
++	// __registerFsAgents on the exported mastra binding at module init, before
++	// any instance exists. A bare arrow factory would fail that typeof check and
++	// the deployed worker would end up agent-less. The static method stores the
++	// agents and every instance the factory creates registers them.
++	const toFsAgentsAwareFactory = mastraInstance => {
++		const createInstance = t.arrowFunctionExpression([], t.blockStatement([
++			t.variableDeclaration("const", [t.variableDeclarator(t.identifier("__mastraInstance"), mastraInstance)]),
++			t.ifStatement(t.logicalExpression("&&", t.memberExpression(t.identifier("__mastraFsAwareFactory"), t.identifier("__fsAgents")), t.memberExpression(t.identifier("__mastraInstance"), t.identifier("__registerFsAgents"))), t.expressionStatement(t.callExpression(t.memberExpression(t.identifier("__mastraInstance"), t.identifier("__registerFsAgents")), [t.memberExpression(t.identifier("__mastraFsAwareFactory"), t.identifier("__fsAgents"))]))),
++			t.returnStatement(t.identifier("__mastraInstance"))
++		]));
++		const factoryDeclaration = t.variableDeclaration("const", [t.variableDeclarator(t.identifier("__mastraFsAwareFactory"), createInstance)]);
++		const registerFsAgents = t.expressionStatement(t.assignmentExpression("=", t.memberExpression(t.identifier("__mastraFsAwareFactory"), t.identifier("__registerFsAgents")), t.arrowFunctionExpression([t.identifier("__agents")], t.blockStatement([t.expressionStatement(t.assignmentExpression("=", t.memberExpression(t.identifier("__mastraFsAwareFactory"), t.identifier("__fsAgents")), t.identifier("__agents")))]))));
++		return t.callExpression(t.arrowFunctionExpression([], t.blockStatement([
++			factoryDeclaration,
++			registerFsAgents,
++			t.returnStatement(t.identifier("__mastraFsAwareFactory"))
++		])), []);
 +	};
  	return {
  		name: "wrap-mastra",
@@ -20,15 +40,22 @@ index 1d437a53fb4fdf261170c6d43637a73b65e6e949..ebdd26ba9ca700879477f1620eef21ea
 +			if (remainingDeclarations.length === 0) path.remove();
 +			else path.node.declarations = remainingDeclarations;
 +		}, ObjectProperty(path) {
-+			if (path.parentPath.isObjectExpression() && t.isIdentifier(path.node.key, { name: "defaultWorkspaceBasePath" })) path.node.value = t.stringLiteral("");
++			// The fs-agents wrapper resolves defaultWorkspaceBasePath to a build-host
++			// path, and the Mastra core attaches a default LocalFilesystem+LocalSandbox
++			// workspace whenever the property is present — even as "". Drop the whole
++			// property instead: an undefined base path yields no workspace at all, so
++			// the built worker never advertises file/shell tools it cannot honor.
++			if (path.parentPath.isObjectExpression() && t.isIdentifier(path.node.key, { name: "defaultWorkspaceBasePath" })) path.remove();
 +		}, ExportNamedDeclaration(path) {
  			if (t.isVariableDeclaration(path.node?.declaration)) {
  				for (const declaration of path.node.declaration.declarations) if (t.isIdentifier(declaration?.id, { name: exportName }) && t.isNewExpression(declaration?.init) && t.isIdentifier(declaration.init.callee, { name: className })) {
+-					declaration.init = t.arrowFunctionExpression([], declaration.init);
 +					removeDeployerOption(declaration.init);
- 					declaration.init = t.arrowFunctionExpression([], declaration.init);
++					declaration.init = toFsAgentsAwareFactory(declaration.init);
  					break;
  				}
-@@ -49,7 +62,7 @@ function mastraInstanceWrapper(mastraEntryFile) {
+ 			}
+@@ -49,7 +87,7 @@ function mastraInstanceWrapper(mastraEntryFile) {
  	return {
  		name: "mastra-wrapper",
  		transform(code, id) {

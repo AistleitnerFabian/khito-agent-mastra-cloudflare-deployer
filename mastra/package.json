@@ -16,7 +16,8 @@
     "@mastra/core": "^1.59.0",
     "@mastra/deployer-cloudflare": "^1.2.16",
     "pnpapi": "0.0.0",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "zod-from-json-schema": "0.5.6"
   },
   "devDependencies": {
     "@types/node": "^26.2.0",

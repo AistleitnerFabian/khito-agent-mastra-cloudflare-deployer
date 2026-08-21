@@ -1,0 +1,65 @@
+diff --git a/dist/schema-Bv9OdW1f-DLSJSqQv.js b/dist/schema-Bv9OdW1f-DLSJSqQv.js
+index 368d8a20ef6c10179a8cce696cbb688936976783..03a711fc007086a9714780234771d8b625b4cb42 100644
+--- a/dist/schema-Bv9OdW1f-DLSJSqQv.js
++++ b/dist/schema-Bv9OdW1f-DLSJSqQv.js
+@@ -1,5 +1,7 @@
+ import { toJSONSchema, z } from "zod/v4";
+ import z3, { ZodFirstPartyTypeKind } from "zod/v3";
++import { convertJsonSchemaToZod } from "zod-from-json-schema";
++const runsOnWorkerd = typeof navigator !== "undefined" && navigator.userAgent.includes("Cloudflare");
+ //#region ../schema-compat/dist/json-schema-traverse-B35mHRM8.js
+ var __create = Object.create;
+ var __defProp = Object.defineProperty;
+@@ -7776,6 +7778,7 @@ var JsonSchemaWrapper = class {
+ 	#schema;
+ 	#options;
+ 	#ajvValidateCache = null;
++	#zodValidateCache = null;
+ 	#ajvInstance = null;
+ 	"~standard";
+ 	constructor(schema, options = {}) {
+@@ -7798,6 +7801,7 @@ var JsonSchemaWrapper = class {
+ 	* @returns A result object with either the validated value or validation issues
+ 	*/
+ 	#validate(value) {
++		if (runsOnWorkerd) return this.#validateWithZod(value);
+ 		try {
+ 			const validateFn = this.#getAjvValidator();
+ 			const result = validateFn(value);
+@@ -7817,6 +7821,36 @@ var JsonSchemaWrapper = class {
+ 		}
+ 	}
+ 	/**
++	* Validates a value against the JSON Schema using a zod conversion.
++	*
++	* Used on runtimes where dynamic code evaluation is unavailable (e.g. Cloudflare
++	* Workers), where Ajv cannot compile validators via `new Function`.
++	*
++	* @param value - The value to validate
++	* @returns A result object with either the validated value or validation issues
++	*/
++	#validateWithZod(value) {
++		try {
++			const zodSchema = this.#getZodValidator();
++			const result = zodSchema.safeParse(value);
++			if (result.success) return { value };
++			return { issues: result.error.issues.map((issue) => ({
++				message: issue.message,
++				path: issue.path
++			})) };
++		} catch (error) {
++			return { issues: [{ message: `Schema validation error: ${error instanceof Error ? error.message : "Unknown validation error"}` }] };
++		}
++	}
++	/**
++	* Gets or creates a zod schema converted from the JSON Schema.
++	* The converted schema is cached for performance.
++	*/
++	#getZodValidator() {
++		this.#zodValidateCache ??= convertJsonSchemaToZod(this.#schema);
++		return this.#zodValidateCache;
++	}
++	/**
+ 	* Converts an Ajv instance path (e.g., "/foo/0/bar") to a Standard Schema path array.
+ 	*
+ 	* @param instancePath - The Ajv instance path

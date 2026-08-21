@@ -14,6 +14,8 @@ minimumReleaseAgeExclude:
   - wrangler@4.123.0
 patchedDependencies:
   '@mastra/deployer-cloudflare@1.2.16': mastra/patches/@mastra__deployer-cloudflare@1.2.16.patch
+  '@mastra/schema-compat@1.3.7': mastra/patches/@mastra__schema-compat@1.3.7.patch
+  '@mastra/server@1.59.0': mastra/patches/@mastra__server@1.59.0.patch
 packages:
   - mastra
   - web
