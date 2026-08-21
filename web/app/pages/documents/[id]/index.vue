@@ -31,15 +31,24 @@
       :class="resizingSidebar ? '' : 'transition-[max-width] duration-200 ease-out'"
       :style="{ maxWidth: viewerHidden ? sidebarExpandedWidth : `${sidebarWidth}px` }"
     >
-      <UButton
-        class="mb-4"
-        color="neutral"
-        variant="ghost"
-        size="xs"
-        icon="i-lucide-arrow-left"
-        label="Documents"
-        to="/documents"
-      />
+      <div class="mb-4 flex items-center justify-between">
+        <UButton
+          color="neutral"
+          variant="ghost"
+          size="xs"
+          icon="i-lucide-arrow-left"
+          label="Documents"
+          to="/documents"
+        />
+        <UButton
+          color="neutral"
+          variant="ghost"
+          size="xs"
+          :icon="sidebarExpanded ? 'i-lucide-panel-left-close' : 'i-lucide-panel-left-open'"
+          :aria-label="sidebarExpanded ? 'Collapse form sidebar' : 'Expand form sidebar'"
+          @click="sidebarExpanded ? collapseSidebar() : expandSidebar()"
+        />
+      </div>
 
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
@@ -260,10 +269,7 @@ function moveSidebarResize(event: PointerEvent) {
   const draggedWidth = sidebarDragOrigin.width + event.clientX - sidebarDragOrigin.pointerX;
 
   if (draggedWidth > sidebarMaxWidth + sidebarExpandSnapPadding) {
-    if (!sidebarExpanded.value) {
-      sidebarExpanded.value = true;
-      formSidebar.value?.style.removeProperty("max-width");
-    }
+    if (!sidebarExpanded.value) expandSidebar();
     return;
   }
 
@@ -291,6 +297,11 @@ function stopSidebarResize() {
 function resetSidebarWidth() {
   sidebarExpanded.value = false;
   sidebarWidth.value = defaultSidebarWidth;
+  formSidebar.value?.style.removeProperty("max-width");
+}
+
+function expandSidebar() {
+  sidebarExpanded.value = true;
   formSidebar.value?.style.removeProperty("max-width");
 }
 

@@ -10,18 +10,6 @@
       <span v-if="open" class="text-sm font-semibold tracking-wide text-highlighted">Khito</span>
     </div>
 
-    <div class="absolute top-4 right-0 translate-x-1/2 bg-default">
-      <UButton
-        icon="i-lucide-chevrons-right"
-        color="neutral"
-        variant="link"
-        :class="{ 'rotate-180': open }"
-        :ui="{ leadingIcon: 'size-4' }"
-        aria-label="Toggle sidebar"
-        @click="open = !open"
-      />
-    </div>
-
     <USeparator class="w-full" />
 
     <div class="min-h-0 flex-1 overflow-y-auto">
@@ -34,12 +22,7 @@
         delayDuration: 0,
         content: { side: 'right' },
       }"
-      :ui="{
-        link: 'overflow-hidden p-2',
-        linkLeadingIcon: 'size-4',
-        linkLabel: 'text-xs font-light text-highlighted',
-        list: 'flex flex-col gap-1',
-      }"
+      :ui="navMenuUi"
     >
       <template #khito-label>
         Khito <span class="ms-1 text-dimmed">AI chat</span>
@@ -59,12 +42,7 @@
         delayDuration: 0,
         content: { side: 'right' },
       }"
-      :ui="{
-        link: 'overflow-hidden p-2',
-        linkLeadingIcon: 'size-4',
-        linkLabel: 'text-xs font-light text-highlighted',
-        list: 'flex flex-col gap-1',
-      }"
+      :ui="navMenuUi"
       />
 
       <div v-if="open" class="px-4 pt-3 pb-1">
@@ -80,12 +58,7 @@
         delayDuration: 0,
         content: { side: 'right' },
       }"
-      :ui="{
-        link: 'overflow-hidden p-2',
-        linkLeadingIcon: 'size-4',
-        linkLabel: 'text-xs font-light text-highlighted',
-        list: 'flex flex-col gap-1',
-      }"
+      :ui="navMenuUi"
       />
     </div>
 
@@ -124,7 +97,19 @@
 <script setup lang="ts">
 import type { DropdownMenuItem, NavigationMenuItem } from "@nuxt/ui";
 
-const open = ref(true);
+// Owned by the layout: the collapse toggle lives outside this aside (its
+// straddling overhang must not be clipped by the aside's overflow-hidden,
+// which exists to keep nav labels inside during the width transition).
+const open = defineModel<boolean>("open", { default: true });
+
+// Collapsed links hide their label, which leaves the lone leading icon parked
+// at the row's start edge — center it explicitly.
+const navMenuUi = computed(() => ({
+  link: open.value ? "overflow-hidden p-2" : "overflow-hidden justify-center p-2",
+  linkLeadingIcon: "size-4",
+  linkLabel: "text-xs font-light text-highlighted",
+  list: "flex flex-col gap-1",
+}));
 // @nuxt/ui's color-mode integration owns the <html> class; this is the
 // single app-side handle for reading and switching it.
 const colorMode = useColorMode();

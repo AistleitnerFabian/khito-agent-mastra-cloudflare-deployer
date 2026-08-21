@@ -292,9 +292,13 @@ watch(activePage, () => {
 });
 
 watch(activeField, () => {
-  const firstBound = props.detail.bounds[activeField.value]?.[0];
-  if (firstBound && firstBound.pageNo !== activePage.value) {
-    activePage.value = firstBound.pageNo;
+  // Markers only exist for fields with a bound on the current page, so a
+  // marker click must keep that page; navigating to the field's first bound
+  // here used to teleport every marker click back to page 1. Selections from
+  // the form or the popout window still jump to the first occurrence.
+  const bounds = props.detail.bounds[activeField.value] ?? [];
+  if (bounds.length > 0 && !bounds.some(bound => bound.pageNo === activePage.value)) {
+    activePage.value = bounds[0].pageNo;
   }
 
   nextTick(updateMarkerPositions);
