@@ -297,8 +297,9 @@ watch(activeField, () => {
   // here used to teleport every marker click back to page 1. Selections from
   // the form or the popout window still jump to the first occurrence.
   const bounds = props.detail.bounds[activeField.value] ?? [];
-  if (bounds.length > 0 && !bounds.some(bound => bound.pageNo === activePage.value)) {
-    activePage.value = bounds[0].pageNo;
+  const firstBound = bounds[0];
+  if (firstBound && !bounds.some(bound => bound.pageNo === activePage.value)) {
+    activePage.value = firstBound.pageNo;
   }
 
   nextTick(updateMarkerPositions);

@@ -1,7 +1,7 @@
 <template>
-  <div class="overflow-hidden border border-default bg-elevated">
-    <div ref="editorElement" class="min-h-96 text-sm" />
-    <p class="border-t border-default px-4 py-3 text-sm" :class="isValid ? 'text-success' : 'text-error'">
+  <div class="flex flex-col overflow-hidden border border-default bg-elevated">
+    <div ref="editorElement" class="min-h-96 flex-1 text-sm" />
+    <p class="shrink-0 border-t border-default px-4 py-3 text-sm" :class="isValid ? 'text-success' : 'text-error'">
       {{ validationMessage }}
     </p>
   </div>
@@ -44,6 +44,7 @@ onMounted(() => {
       extensions: [
         basicSetup,
         json(),
+        EditorView.theme({ "&": { height: "100%" }, ".cm-scroller": { overflow: "auto" } }),
         EditorView.updateListener.of((update) => {
           if (!update.docChanged) return;
           schema.value = update.state.doc.toString();

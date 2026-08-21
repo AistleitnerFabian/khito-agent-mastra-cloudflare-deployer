@@ -9,12 +9,27 @@
         <UButton icon="i-lucide-plus" label="New" @click="openCreate" />
       </div>
 
-      <AdminCreateDialog v-model:open="showForm" :title="editingIndex === null ? 'New document definition' : 'Edit document definition'" description="Use a valid JSON Schema to define the output." form-id="document-definition-form" :submit-label="editingIndex === null ? 'Create definition' : 'Save changes'" :submit-disabled="!isSchemaValid">
-        <form id="document-definition-form" class="space-y-4" @submit.prevent="addDocument">
-          <UFormField name="name" label="Name" required><UInput v-model="draft.name" size="lg" placeholder="e.g. Service request" /></UFormField>
-          <UFormField name="schema" label="JSON Schema" required><AdminJsonSchemaEditor v-model="draft.schema" @validation-change="isSchemaValid = $event" /></UFormField>
+      <AdminEditorDialog
+        v-model:open="showForm"
+        description="Build the form Khito should fill for this document type."
+        form-id="document-definition-form"
+        :submit-label="editingIndex === null ? 'Create definition' : 'Save changes'"
+        :submit-disabled="!draft.name.trim() || !isSchemaValid"
+      >
+        <template #title>
+          <UInput
+            v-model="draft.name"
+            variant="none"
+            placeholder="Untitled definition"
+            aria-label="Definition name"
+            class="w-full max-w-sm px-0 text-lg font-semibold text-highlighted placeholder:font-normal placeholder:text-dimmed"
+          />
+        </template>
+
+        <form id="document-definition-form" class="flex h-full min-h-0 flex-col" @submit.prevent="addDocument">
+          <AdminFormBuilder v-model="draft.schema" class="min-h-0 flex-1" @validation-change="isSchemaValid = $event" />
         </form>
-      </AdminCreateDialog>
+      </AdminEditorDialog>
 
       <div class="mt-8 border-y border-default">
         <article v-for="(document, index) in documents" :key="document.name" class="flex items-center justify-between gap-4 border-b border-default py-5 last:border-b-0">

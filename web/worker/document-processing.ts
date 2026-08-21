@@ -2,7 +2,7 @@ import type { DocumentBounds } from "@khito/shared/documents";
 import { completeDocumentExtraction, failDocumentExtraction, findDocument, type DocumentsDatabase } from "@khito/shared/documents-database";
 import { findInboxItem, type InboxDatabase } from "@khito/shared/inbox-database";
 import { locateDocumentBounds } from "./bounding-boxes";
-import { extractDocumentData, type DocumentExtraction, type ExtractionSource } from "./document-extractor";
+import type { DocumentExtraction, ExtractionSource } from "./document-extractor";
 
 export type DocumentProcessingServices = {
   documents: DocumentsDatabase;
